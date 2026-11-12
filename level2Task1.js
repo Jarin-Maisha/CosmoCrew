@@ -535,6 +535,13 @@ class Task1AirLeak {
 
   drawAstronaut(ctx) {
     const a = this.astronaut;
+    const profile = window.playerProfile || {
+      avatarId: 'cat',
+      avatarName: 'Cadet',
+      color: '#ff70a6',
+      accent: '#ff9770'
+    };
+
     ctx.save();
     ctx.translate(a.x, a.y);
     ctx.scale(a.facing, 1);
@@ -555,18 +562,57 @@ class Task1AirLeak {
     // Body
     ctx.fillStyle = '#f8fafc';
     ctx.fillRect(-10, -16, 20, 28);
-    ctx.strokeStyle = '#0284c7';
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = profile.color;
+    ctx.lineWidth = 2.5;
     ctx.strokeRect(-10, -16, 20, 28);
 
     // Helmet
     ctx.beginPath();
-    ctx.arc(0, -24, 13, 0, Math.PI * 2);
+    ctx.arc(0, -24, 14, 0, Math.PI * 2);
     ctx.fillStyle = '#f1f5f9';
     ctx.fill();
-    ctx.strokeStyle = '#0284c7';
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = profile.color;
+    ctx.lineWidth = 2.5;
     ctx.stroke();
+
+    // Cute Avatar Ears based on chosen character
+    if (profile.avatarId === 'cat') {
+      ctx.fillStyle = profile.color;
+      ctx.beginPath();
+      ctx.moveTo(-11, -34);
+      ctx.lineTo(-5, -44);
+      ctx.lineTo(0, -37);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(11, -34);
+      ctx.lineTo(5, -44);
+      ctx.lineTo(0, -37);
+      ctx.fill();
+    } else if (profile.avatarId === 'bear') {
+      ctx.fillStyle = profile.color;
+      ctx.beginPath();
+      ctx.arc(-11, -36, 5.5, 0, Math.PI * 2);
+      ctx.arc(11, -36, 5.5, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (profile.avatarId === 'bunny') {
+      ctx.fillStyle = profile.color;
+      ctx.beginPath();
+      ctx.ellipse(-7, -43, 4.5, 11, -0.15, 0, Math.PI * 2);
+      ctx.ellipse(7, -43, 4.5, 11, 0.15, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (profile.avatarId === 'fox') {
+      ctx.fillStyle = profile.color;
+      ctx.beginPath();
+      ctx.moveTo(-12, -33);
+      ctx.lineTo(-7, -44);
+      ctx.lineTo(-1, -36);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(12, -33);
+      ctx.lineTo(7, -44);
+      ctx.lineTo(1, -36);
+      ctx.fill();
+    }
 
     // Visor
     ctx.beginPath();
