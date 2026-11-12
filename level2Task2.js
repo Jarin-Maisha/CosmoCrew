@@ -237,6 +237,14 @@ class Task2SpaceRunner {
       this.updateHUD();
     }, 1000);
 
+    const playerName = (window.playerProfile && window.playerProfile.avatarName) || 'Runner';
+    if (window.robotBuddy) {
+      window.robotBuddy.say(
+        `Run ${playerName}! Arrow keys or A/D to steer, Up/Space to JUMP red lasers, Down to SLIDE yellow gantries! Gather 5 O₂, 5 Water, 5 Shields!`,
+        'excited'
+      );
+    }
+
     this.lastTime = performance.now();
     this.loop();
     this.updateHUD();
@@ -259,6 +267,16 @@ class Task2SpaceRunner {
     if (this.timerInterval) clearInterval(this.timerInterval);
     if (window.soundSystem) window.soundSystem.stopMusic();
 
+    const playerName = (window.playerProfile && window.playerProfile.avatarName) || 'Runner';
+    if (window.soundSystem) window.soundSystem.playVictory();
+    if (window.showConfetti) window.showConfetti();
+    if (window.robotBuddy) {
+      window.robotBuddy.say(
+        `Incredible sprint, ${playerName}! All 15 survival items collected from the lunar highway!`,
+        'celebrate'
+      );
+    }
+
     setTimeout(() => {
       if (this.callbacks.onWin) {
         this.callbacks.onWin({
@@ -266,7 +284,7 @@ class Task2SpaceRunner {
           collected: this.resources
         });
       }
-    }, 600);
+    }, 1200);
   }
 
   triggerGameOver(reason) {
@@ -1004,9 +1022,49 @@ class Task2SpaceRunner {
     ctx.arc(0, -68, 17, 0, Math.PI * 2);
     ctx.fillStyle = '#f1f5f9';
     ctx.fill();
-    ctx.strokeStyle = '#0284c7';
-    ctx.lineWidth = 2;
+    const profile = window.playerProfile || { avatarId: 'cat', color: '#ff70a6' };
+    ctx.strokeStyle = profile.color;
+    ctx.lineWidth = 2.5;
     ctx.stroke();
+
+    // Cute Avatar Ears based on chosen character
+    if (profile.avatarId === 'cat') {
+      ctx.fillStyle = profile.color;
+      ctx.beginPath();
+      ctx.moveTo(-13, -79);
+      ctx.lineTo(-7, -91);
+      ctx.lineTo(-1, -82);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(13, -79);
+      ctx.lineTo(7, -91);
+      ctx.lineTo(1, -82);
+      ctx.fill();
+    } else if (profile.avatarId === 'bear') {
+      ctx.fillStyle = profile.color;
+      ctx.beginPath();
+      ctx.arc(-13, -82, 6, 0, Math.PI * 2);
+      ctx.arc(13, -82, 6, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (profile.avatarId === 'bunny') {
+      ctx.fillStyle = profile.color;
+      ctx.beginPath();
+      ctx.ellipse(-8, -90, 5, 13, -0.12, 0, Math.PI * 2);
+      ctx.ellipse(8, -90, 5, 13, 0.12, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (profile.avatarId === 'fox') {
+      ctx.fillStyle = profile.color;
+      ctx.beginPath();
+      ctx.moveTo(-14, -79);
+      ctx.lineTo(-8, -92);
+      ctx.lineTo(-2, -82);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(14, -79);
+      ctx.lineTo(8, -92);
+      ctx.lineTo(2, -82);
+      ctx.fill();
+    }
 
     // Visor (Shiny gold-cyan reflective mirror glass)
     ctx.beginPath();

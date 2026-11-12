@@ -309,6 +309,14 @@ class Task3PowerSave {
       this.updateHUD();
     }, 1000);
 
+    const playerName = (window.playerProfile && window.playerProfile.avatarName) || 'Cadet';
+    if (window.robotBuddy) {
+      window.robotBuddy.say(
+        `Cadet ${playerName}! 3 critical ship systems are malfunctioning! Click each red blinking room to solve wires, power, or keypad puzzles!`,
+        'worried'
+      );
+    }
+
     this.lastTime = performance.now();
     this.loop();
     this.updateHUD();
