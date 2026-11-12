@@ -1,17 +1,167 @@
 /**
- * Space Survival Level 2 - UI & Screen Management System
- * Handles HUD rendering, screen transitions, briefing modals, task complete dialogs,
- * game over screens, victory diplomas, audio controls, and touch buttons.
+ * CosmoCrew - UI & Screen Management System
+ * Handles Opening Page, Avatar Selection, Rocket Launch Animation, Level Selection,
+ * Robot Buddy Guide, HUD, Task Transitions, Sound Controls, and Celebrations.
  */
 
+/* -------------------------------------------------------------
+   ROBOT BUDDY COMPONENT
+   ------------------------------------------------------------- */
+class RobotBuddy {
+  constructor() {
+    this.wrap = document.getElementById('robotBuddyWidget');
+    this.eyes = document.getElementById('robotEyes');
+    this.bubble = document.getElementById('robotSpeechBubble');
+    this.textEl = document.getElementById('robotSpeechText');
+    this.timer = null;
+    this.currentEmotion = 'normal';
+  }
+
+  say(message, emotion = 'normal', duration = 0) {
+    if (!this.textEl || !this.bubble) return;
+
+    this.currentEmotion = emotion;
+    this.setEmotion(emotion);
+
+    // Cute typing / pop-in text
+    this.textEl.textContent = message;
+    this.bubble.classList.add('visible');
+
+    // Bounce animation
+    if (this.wrap) {
+      this.wrap.classList.remove('bounce');
+      void this.wrap.offsetWidth; // trigger reflow
+      this.wrap.classList.add('bounce');
+    }
+
+    // Play robot speech chirps
+    if (window.soundSystem) {
+      window.soundSystem.playRobotChirp();
+    }
+
+    if (this.timer) clearTimeout(this.timer);
+    if (duration > 0) {
+      this.timer = setTimeout(() => {
+        this.hideBubble();
+      }, duration);
+    }
+  }
+
+  setEmotion(emotion) {
+    if (!this.eyes) return;
+    this.eyes.className = 'robot-eyes';
+    if (emotion === 'happy') {
+      this.eyes.textContent = '^  ^';
+      this.eyes.classList.add('happy');
+    } else if (emotion === 'worried') {
+      this.eyes.textContent = 'O  O';
+      this.eyes.classList.add('worried');
+    } else if (emotion === 'celebrate') {
+      this.eyes.textContent = '★  ★';
+      this.eyes.classList.add('celebrate');
+    } else if (emotion === 'excited') {
+      this.eyes.textContent = '♥  ♥';
+      this.eyes.classList.add('excited');
+    } else {
+      this.eyes.textContent = '•  •';
+    }
+  }
+
+  hideBubble() {
+    if (this.bubble) this.bubble.classList.remove('visible');
+    this.setEmotion('normal');
+  }
+}
+
+/* -------------------------------------------------------------
+   CONFETTI CELEBRATION
+   ------------------------------------------------------------- */
+function showConfetti(duration = 2200) {
+  let canvas = document.getElementById('confettiCanvas');
+  if (!canvas) {
+    canvas = document.createElement('canvas');
+    canvas.id = 'confettiCanvas';
+    canvas.style.position = 'fixed';
+    canvas.style.top = '0';
+    canvas.style.left = '0';
+    canvas.style.width = '100vw';
+    canvas.style.height = '100vh';
+    canvas.style.pointerEvents = 'none';
+    canvas.style.zIndex = '99999';
+    document.body.appendChild(canvas);
+  }
+
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const colors = ['#00f0ff', '#ff70a6', '#ffd166', '#06d6a0', '#ffbe0b', '#70d6ff'];
+  const pieces = [];
+  for (let i = 0; i < 90; i++) {
+    pieces.push({
+      x: Math.random() * canvas.width,
+      y: -20 - Math.random() * 50,
+      w: 8 + Math.random() * 8,
+      h: 5 + Math.random() * 6,
+      vx: (Math.random() - 0.5) * 4,
+      vy: 3 + Math.random() * 5,
+      rot: Math.random() * Math.PI * 2,
+      vRot: (Math.random() - 0.5) * 0.2,
+      color: colors[Math.floor(Math.random() * colors.length)]
+    });
+  }
+
+  let animId = null;
+  const start = performance.now();
+
+  function draw(now) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    pieces.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.rot += p.vRot;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      ctx.restore();
+    });
+
+    if (now - start < duration) {
+      animId = requestAnimationFrame(draw);
+    } else {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      cancelAnimationFrame(animId);
+    }
+  }
+
+  animId = requestAnimationFrame(draw);
+}
+window.showConfetti = showConfetti;
+
+/* -------------------------------------------------------------
+   UI & SCREEN MANAGER
+   ------------------------------------------------------------- */
 class UIManager {
   constructor() {
     this.currentScreen = 'title';
+    this.currentLevel = 1;
     this.currentTask = 1;
 
-    // Elements cache
+    // Default player profile
+    window.playerProfile = {
+      avatarId: 'bunny',
+      avatarName: 'Pip',
+      avatarTitle: 'Star Bunny',
+      avatarEmoji: '🐰',
+      color: '#00f0ff',
+      accent: '#06d6a0'
+    };
+
     this.screens = {
       title: document.getElementById('screenTitle'),
+      levelSelect: document.getElementById('screenLevelSelect'),
       game: document.getElementById('screenGame')
     };
 
@@ -27,9 +177,9 @@ class UIManager {
       taskTag: document.getElementById('hudTaskTag'),
       taskName: document.getElementById('hudTaskName'),
       timerVal: document.getElementById('hudTimerVal'),
-      task1Hud: document.getElementById('task1HudItems'),
-      task2Hud: document.getElementById('task2HudItems'),
-      task3Hud: document.getElementById('task3HudItems'),
+      avatarBadge: document.getElementById('hudAvatarBadge'),
+      avatarIcon: document.getElementById('hudAvatarIcon'),
+      avatarName: document.getElementById('hudAvatarName'),
       stepDots: [
         document.getElementById('stepDot1'),
         document.getElementById('stepDot2'),
@@ -42,10 +192,155 @@ class UIManager {
     };
 
     this.bindGlobalUIEvents();
+    this.bindAvatarSelection();
+    this.bindRocketStart();
+  }
+
+  bindAvatarSelection() {
+    const avatarCards = document.querySelectorAll('.avatar-option');
+    const nameInput = document.getElementById('avatarNameInput');
+
+    const avatars = {
+      bunny: { name: 'Pip', title: 'Star Bunny', emoji: '🐰', color: '#00f0ff', accent: '#06d6a0' },
+      cat: { name: 'Luna', title: 'Cosmo Kitty', emoji: '🐱', color: '#ff70a6', accent: '#ffd166' },
+      bear: { name: 'Barnaby', title: 'Astro Bear', emoji: '🐻', color: '#ffbe0b', accent: '#fb5607' },
+      fox: { name: 'Sparky', title: 'Rocket Fox', emoji: '🦊', color: '#ff9770', accent: '#ff4d6d' }
+    };
+
+    avatarCards.forEach(card => {
+      card.addEventListener('click', () => {
+        avatarCards.forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+
+        const aid = card.getAttribute('data-avatar');
+        const info = avatars[aid] || avatars.bunny;
+
+        window.playerProfile.avatarId = aid;
+        window.playerProfile.avatarTitle = info.title;
+        window.playerProfile.avatarEmoji = info.emoji;
+        window.playerProfile.color = info.color;
+        window.playerProfile.accent = info.accent;
+
+        if (nameInput) {
+          nameInput.value = info.name;
+          window.playerProfile.avatarName = info.name;
+        }
+
+        if (window.soundSystem) window.soundSystem.playButtonClick();
+        this.updateProfileDisplays();
+
+        if (window.robotBuddy) {
+          window.robotBuddy.say(`Cute choice! Looking sharp, ${info.name}!`, 'happy', 2500);
+        }
+      });
+    });
+
+    if (nameInput) {
+      nameInput.addEventListener('input', (e) => {
+        const val = e.target.value.trim();
+        window.playerProfile.avatarName = val || 'Cadet';
+        this.updateProfileDisplays();
+      });
+    }
+
+    this.updateProfileDisplays();
+  }
+
+  updateProfileDisplays() {
+    const p = window.playerProfile;
+    if (!p) return;
+
+    // Update HUD
+    if (this.hud.avatarIcon) this.hud.avatarIcon.textContent = p.avatarEmoji;
+    if (this.hud.avatarName) this.hud.avatarName.textContent = p.avatarName;
+
+    // Update Level Select greeting
+    const lsBadge = document.getElementById('levelSelectAvatarBadge');
+    if (lsBadge) {
+      lsBadge.innerHTML = `
+        <span class="avatar-badge-emoji">${p.avatarEmoji}</span>
+        <span class="avatar-badge-text">Cadet <strong>${p.avatarName}</strong> (${p.avatarTitle})</span>
+      `;
+    }
+  }
+
+  bindRocketStart() {
+    const btnStart = document.getElementById('btnStartAdventure');
+    const rocket = document.getElementById('titleRocket');
+
+    if (btnStart) {
+      btnStart.addEventListener('click', () => {
+        btnStart.disabled = true;
+
+        // Ensure audio context starts
+        if (window.soundSystem) {
+          window.soundSystem.ensureContext();
+          window.soundSystem.playRocketLaunch();
+        }
+
+        // Animate Rocket Launch
+        if (rocket) {
+          rocket.classList.add('launching');
+        }
+
+        if (window.robotBuddy) {
+          window.robotBuddy.say(`Blastoff, ${window.playerProfile.avatarName}! Heading to orbit!`, 'celebrate');
+        }
+
+        setTimeout(() => {
+          if (rocket) rocket.classList.remove('launching');
+          btnStart.disabled = false;
+          this.showScreen('levelSelect');
+
+          if (window.soundSystem) {
+            window.soundSystem.playMusic('playful');
+          }
+
+          if (window.robotBuddy) {
+            window.robotBuddy.say(
+              `Welcome aboard, ${window.playerProfile.avatarName}! Choose Level 1 or Level 2 to begin our mission!`,
+              'normal'
+            );
+          }
+        }, 1300);
+      });
+    }
+
+    // Level selection planet cards
+    const cardL1 = document.getElementById('cardLevel1');
+    const cardL2 = document.getElementById('cardLevel2');
+    const btnBackToTitle = document.getElementById('btnBackToTitle');
+
+    if (cardL1) {
+      cardL1.addEventListener('click', () => {
+        if (window.soundSystem) {
+          window.soundSystem.playButtonClick();
+          window.soundSystem.playLevelTransition();
+        }
+        if (window.game) window.game.startLevel(1);
+      });
+    }
+
+    if (cardL2) {
+      cardL2.addEventListener('click', () => {
+        if (window.soundSystem) {
+          window.soundSystem.playButtonClick();
+          window.soundSystem.playLevelTransition();
+        }
+        if (window.game) window.game.startLevel(2);
+      });
+    }
+
+    if (btnBackToTitle) {
+      btnBackToTitle.addEventListener('click', () => {
+        if (window.soundSystem) window.soundSystem.playButtonClick();
+        this.showScreen('title');
+      });
+    }
   }
 
   bindGlobalUIEvents() {
-    // Sound & Volume controls in HUD
+    // Music & SFX toggles
     const btnMusic = document.getElementById('btnToggleMusic');
     const btnSfx = document.getElementById('btnToggleSfx');
     const volumeSlider = document.getElementById('volumeSlider');
@@ -55,7 +350,7 @@ class UIManager {
         if (window.soundSystem) {
           const enabled = window.soundSystem.toggleMusic();
           btnMusic.classList.toggle('muted', !enabled);
-          btnMusic.title = enabled ? 'Music: ON' : 'Music: MUTED';
+          btnMusic.textContent = enabled ? '🎵 Music: ON' : '🔇 Music: OFF';
         }
       };
     }
@@ -65,7 +360,7 @@ class UIManager {
         if (window.soundSystem) {
           const enabled = window.soundSystem.toggleSfx();
           btnSfx.classList.toggle('muted', !enabled);
-          btnSfx.title = enabled ? 'SFX: ON' : 'SFX: MUTED';
+          btnSfx.textContent = enabled ? '🔊 SFX: ON' : '🔈 SFX: OFF';
         }
       };
     }
@@ -78,7 +373,7 @@ class UIManager {
       };
     }
 
-    // Pause button in HUD
+    // Pause & Menu Buttons
     const btnPause = document.getElementById('btnPauseGame');
     if (btnPause) {
       btnPause.onclick = () => {
@@ -86,7 +381,6 @@ class UIManager {
       };
     }
 
-    // Pause Modal Buttons
     const btnResume = document.getElementById('btnResumeGame');
     const btnRestartTask = document.getElementById('btnRestartTask');
     const btnQuitToMenu = document.getElementById('btnQuitToMenu');
@@ -107,27 +401,24 @@ class UIManager {
     if (btnQuitToMenu) {
       btnQuitToMenu.onclick = () => {
         this.closeAllModals();
-        if (window.game) window.game.quitToMenu();
+        if (window.game) window.game.quitToLevelSelect();
       };
     }
   }
 
   showScreen(screenName) {
-    Object.keys(this.screens).forEach((name) => {
+    Object.keys(this.screens).forEach(name => {
       const el = this.screens[name];
       if (el) {
-        if (name === screenName) {
-          el.classList.add('active');
-        } else {
-          el.classList.remove('active');
-        }
+        if (name === screenName) el.classList.add('active');
+        else el.classList.remove('active');
       }
     });
     this.currentScreen = screenName;
   }
 
   closeAllModals() {
-    Object.values(this.modals).forEach((m) => {
+    Object.values(this.modals).forEach(m => {
       if (m) m.classList.remove('active');
     });
   }
@@ -135,19 +426,18 @@ class UIManager {
   showModal(modalName) {
     this.closeAllModals();
     const modal = this.modals[modalName];
-    if (modal) {
-      modal.classList.add('active');
-    }
+    if (modal) modal.classList.add('active');
   }
 
   /* -------------------------------------------------------------
-     HUD TASK SWITCHING & PROGRESSION
+     HUD & TASK SWITCHING
      ------------------------------------------------------------- */
-
-  setHUDForTask(taskNum) {
+  setHUDForTask(levelNum, taskNum) {
+    this.currentLevel = levelNum;
     this.currentTask = taskNum;
+    this.updateProfileDisplays();
 
-    // Progression steps
+    // Step dots
     for (let i = 0; i < 3; i++) {
       const dot = this.hud.stepDots[i];
       if (dot) {
@@ -166,40 +456,73 @@ class UIManager {
 
     for (let i = 0; i < 2; i++) {
       const line = this.hud.stepLines[i];
-      if (line) {
-        line.classList.toggle('done', i + 1 < taskNum);
-      }
+      if (line) line.classList.toggle('done', i + 1 < taskNum);
     }
 
-    // Hide all task HUDs, then show specific one
-    if (this.hud.task1Hud) this.hud.task1Hud.style.display = 'none';
-    if (this.hud.task2Hud) this.hud.task2Hud.style.display = 'none';
-    if (this.hud.task3Hud) this.hud.task3Hud.style.display = 'none';
+    // Hide all task views
+    const allViews = [
+      'l1t1View', 'l1t2View', 'l1t3View',
+      'task1View', 'task2View', 'task3View'
+    ];
+    allViews.forEach(vid => {
+      const el = document.getElementById(vid);
+      if (el) el.style.display = 'none';
+    });
 
-    // Show task view containers
-    const t1View = document.getElementById('task1View');
-    const t2View = document.getElementById('task2View');
-    const t3View = document.getElementById('task3View');
+    // Hide all level HUD items
+    const allHuds = ['l1t1HudItems', 'l1t2HudItems', 'l1t3HudItems', 'task1HudItems', 'task2HudItems', 'task3HudItems'];
+    allHuds.forEach(hid => {
+      const el = document.getElementById(hid);
+      if (el) el.style.display = 'none';
+    });
 
-    if (t1View) t1View.style.display = 'none';
-    if (t2View) t2View.style.display = 'none';
-    if (t3View) t3View.style.display = 'none';
-
-    if (taskNum === 1) {
-      if (this.hud.taskTag) this.hud.taskTag.textContent = 'TASK 01 / 03';
-      if (this.hud.taskName) this.hud.taskName.innerHTML = '🛡️ FIX AIR LEAK';
-      if (this.hud.task1Hud) this.hud.task1Hud.style.display = 'flex';
-      if (t1View) t1View.style.display = 'block';
-    } else if (taskNum === 2) {
-      if (this.hud.taskTag) this.hud.taskTag.textContent = 'TASK 02 / 03';
-      if (this.hud.taskName) this.hud.taskName.innerHTML = '🏃 COLLECT ESSENTIALS';
-      if (this.hud.task2Hud) this.hud.task2Hud.style.display = 'flex';
-      if (t2View) t2View.style.display = 'block';
-    } else if (taskNum === 3) {
-      if (this.hud.taskTag) this.hud.taskTag.textContent = 'TASK 03 / 03';
-      if (this.hud.taskName) this.hud.taskName.innerHTML = '⚡ POWER SAVE';
-      if (this.hud.task3Hud) this.hud.task3Hud.style.display = 'flex';
-      if (t3View) t3View.style.display = 'block';
+    // Activate specific view and HUD
+    if (levelNum === 1) {
+      if (taskNum === 1) {
+        if (this.hud.taskTag) this.hud.taskTag.textContent = 'LEVEL 1 • TASK 01 / 03';
+        if (this.hud.taskName) this.hud.taskName.innerHTML = '🧪 OXYGEN REGULATION';
+        const v = document.getElementById('l1t1View');
+        if (v) v.style.display = 'block';
+        const h = document.getElementById('l1t1HudItems');
+        if (h) h.style.display = 'flex';
+      } else if (taskNum === 2) {
+        if (this.hud.taskTag) this.hud.taskTag.textContent = 'LEVEL 1 • TASK 02 / 03';
+        if (this.hud.taskName) this.hud.taskName.innerHTML = '🌱 LUNAR CROP PRODUCTION';
+        const v = document.getElementById('l1t2View');
+        if (v) v.style.display = 'block';
+        const h = document.getElementById('l1t2HudItems');
+        if (h) h.style.display = 'flex';
+      } else if (taskNum === 3) {
+        if (this.hud.taskTag) this.hud.taskTag.textContent = 'LEVEL 1 • TASK 03 / 03';
+        if (this.hud.taskName) this.hud.taskName.innerHTML = '☀️ SOLAR POWER GENERATION';
+        const v = document.getElementById('l1t3View');
+        if (v) v.style.display = 'block';
+        const h = document.getElementById('l1t3HudItems');
+        if (h) h.style.display = 'flex';
+      }
+    } else {
+      if (taskNum === 1) {
+        if (this.hud.taskTag) this.hud.taskTag.textContent = 'LEVEL 2 • TASK 01 / 03';
+        if (this.hud.taskName) this.hud.taskName.innerHTML = '🛡️ FIX AIR LEAK';
+        const v = document.getElementById('task1View');
+        if (v) v.style.display = 'block';
+        const h = document.getElementById('task1HudItems');
+        if (h) h.style.display = 'flex';
+      } else if (taskNum === 2) {
+        if (this.hud.taskTag) this.hud.taskTag.textContent = 'LEVEL 2 • TASK 02 / 03';
+        if (this.hud.taskName) this.hud.taskName.innerHTML = '🏃 COLLECT ESSENTIALS';
+        const v = document.getElementById('task2View');
+        if (v) v.style.display = 'block';
+        const h = document.getElementById('task2HudItems');
+        if (h) h.style.display = 'flex';
+      } else if (taskNum === 3) {
+        if (this.hud.taskTag) this.hud.taskTag.textContent = 'LEVEL 2 • TASK 03 / 03';
+        if (this.hud.taskName) this.hud.taskName.innerHTML = '⚡ POWER SAVE';
+        const v = document.getElementById('task3View');
+        if (v) v.style.display = 'block';
+        const h = document.getElementById('task3HudItems');
+        if (h) h.style.display = 'flex';
+      }
     }
   }
 
@@ -211,64 +534,10 @@ class UIManager {
     this.hud.timerVal.classList.toggle('warning', seconds <= 10);
   }
 
-  updateTask1HUD(data) {
-    this.updateTimer(data.timeLeft);
-    const fill = document.getElementById('t1PressureFill');
-    const pct = document.getElementById('t1PressurePct');
-    const leaks = document.getElementById('t1LeaksRemaining');
-
-    if (fill) {
-      fill.style.width = `${data.pressure}%`;
-      fill.classList.toggle('critical', data.pressure <= 25);
-    }
-    if (pct) pct.textContent = `${data.pressure}%`;
-    if (leaks) leaks.textContent = `${data.leaksRemaining} / ${data.totalLeaks}`;
-
-    const vignette = document.getElementById('hullVignette');
-    if (vignette) {
-      vignette.classList.toggle('active', data.leaksRemaining > 0);
-    }
-  }
-
-  updateTask2HUD(data) {
-    this.updateTimer(data.timeLeft);
-    const o2 = document.getElementById('runnerO2Count');
-    const water = document.getElementById('runnerWaterCount');
-    const shield = document.getElementById('runnerShieldCount');
-
-    if (o2) o2.textContent = `${data.oxygen}/${data.targets.oxygen}`;
-    if (water) water.textContent = `${data.water}/${data.targets.water}`;
-    if (shield) shield.textContent = `${data.shield}/${data.targets.shield}`;
-
-    // Mark complete pills
-    const pillO2 = document.getElementById('pillO2');
-    const pillWater = document.getElementById('pillWater');
-    const pillShield = document.getElementById('pillShield');
-
-    if (pillO2) pillO2.classList.toggle('complete', data.oxygen >= data.targets.oxygen);
-    if (pillWater) pillWater.classList.toggle('complete', data.water >= data.targets.water);
-    if (pillShield) pillShield.classList.toggle('complete', data.shield >= data.targets.shield);
-  }
-
-  updateTask3HUD(data) {
-    this.updateTimer(data.timeLeft);
-    const fill = document.getElementById('t3PowerFill');
-    const pct = document.getElementById('t3PowerPct');
-    const count = document.getElementById('t3RepairedCount');
-
-    if (fill) {
-      fill.style.width = `${data.power}%`;
-      fill.classList.toggle('critical', data.power <= 25);
-    }
-    if (pct) pct.textContent = `${data.power}%`;
-    if (count) count.textContent = `${data.repaired} / ${data.required}`;
-  }
-
   /* -------------------------------------------------------------
      DIALOGS: BRIEFING, COMPLETE, GAME OVER, VICTORY
      ------------------------------------------------------------- */
-
-  showBriefing(taskNum, onStart) {
+  showBriefing(levelNum, taskNum, onStart) {
     const title = document.getElementById('briefingTitle');
     const sub = document.getElementById('briefingSubtitle');
     const tagline = document.getElementById('briefingTagline');
@@ -278,146 +547,132 @@ class UIManager {
     const guide = document.getElementById('briefingControlsGuide');
     const startBtn = document.getElementById('btnStartTask');
 
-    if (taskNum === 1) {
-      if (title) title.textContent = 'TASK 1: FIX AIR LEAK';
-      if (tagline) tagline.textContent = 'HULL INTEGRITY EMERGENCY';
-      if (codeId) codeId.textContent = 'SYS-ORD #01-AIR-SEAL';
-      if (iconWrap) {
-        iconWrap.innerHTML = `
-          <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#ff2a5f" stroke-width="2.2">
-            <circle cx="12" cy="12" r="9"></circle>
-            <line x1="8" y1="12" x2="16" y2="12"></line>
-            <line x1="12" y1="8" x2="12" y2="16"></line>
-            <circle cx="12" cy="12" r="2" fill="#ff2a5f"></circle>
-          </svg>
-        `;
+    const pName = (window.playerProfile && window.playerProfile.avatarName) || 'Explorer';
+
+    if (levelNum === 1) {
+      if (taskNum === 1) {
+        if (title) title.textContent = 'TASK 1: OXYGEN REGULATION';
+        if (tagline) tagline.textContent = 'EARTH WORKSHOP • BIO-DOME LIFE SUPPORT';
+        if (codeId) codeId.textContent = 'MISSION #01-OXYGEN';
+        if (iconWrap) iconWrap.innerHTML = '🧪';
+        if (sub) sub.textContent = `Welcome ${pName}! Adjust the slider until the oxygen gauge enters the safe green zone (19%–23%, target: 21%). Keep our greenhouse plants thriving!`;
+        if (protocols) {
+          protocols.innerHTML = `
+            <div class="protocol-item"><span>⏱️</span> <strong>TIME LIMIT:</strong> 60 Seconds</div>
+            <div class="protocol-item"><span>🎯</span> <strong>TARGET:</strong> 21% Oxygen (Safe: 19%–23%)</div>
+            <div class="protocol-item"><span>🔒</span> <strong>LOCK-IN:</strong> Press Lock In once stable</div>
+          `;
+        }
+        if (guide) {
+          guide.innerHTML = `
+            <div class="board-key-row">
+              <span class="board-key-action">Drag the slider or use Arrow Keys to adjust oxygen.</span>
+            </div>
+          `;
+        }
+      } else if (taskNum === 2) {
+        if (title) title.textContent = 'TASK 2: LUNAR CROP PRODUCTION';
+        if (tagline) tagline.textContent = 'EARTH WORKSHOP • GREENHOUSE FARMING';
+        if (codeId) codeId.textContent = 'MISSION #02-CROPS';
+        if (iconWrap) iconWrap.innerHTML = '🌱';
+        if (sub) sub.textContent = `Time to farm cosmic crops, ${pName}! Walk to each soil bed to drop seeds, then water them, let them grow, and harvest delicious food!`;
+        if (protocols) {
+          protocols.innerHTML = `
+            <div class="protocol-item"><span>⏱️</span> <strong>TIME LIMIT:</strong> 90 Seconds</div>
+            <div class="protocol-item"><span>🌱</span> <strong>STEPS:</strong> Plant Seeds → Water → Grow → Harvest</div>
+            <div class="protocol-item"><span>🍎</span> <strong>TARGET:</strong> 4 Cosmic Crop Beds</div>
+          `;
+        }
+        if (guide) {
+          guide.innerHTML = `
+            <div class="board-key-row">
+              <span class="board-key-action">Move: <strong>Arrow Keys / WASD</strong> • Action: <strong>Spacebar / Button</strong></span>
+            </div>
+          `;
+        }
+      } else if (taskNum === 3) {
+        if (title) title.textContent = 'TASK 3: SOLAR POWER GENERATION';
+        if (tagline) tagline.textContent = 'EARTH WORKSHOP • CLEAN ENERGY';
+        if (codeId) codeId.textContent = 'MISSION #03-SOLAR';
+        if (iconWrap) iconWrap.innerHTML = '☀️';
+        if (sub) sub.textContent = `Assemble the solar array, ${pName}! Drag solar panel pieces onto the grey BARREN land slots. Remember: never place them on green fertile crop soil!`;
+        if (protocols) {
+          protocols.innerHTML = `
+            <div class="protocol-item"><span>⏱️</span> <strong>TIME LIMIT:</strong> 90 Seconds</div>
+            <div class="protocol-item"><span>⚡</span> <strong>TARGET:</strong> Install all 4 Solar Panels</div>
+            <div class="protocol-item"><span>🛡️</span> <strong>PROTECT:</strong> Do NOT place on Fertile Land</div>
+          `;
+        }
+        if (guide) {
+          guide.innerHTML = `
+            <div class="board-key-row">
+              <span class="board-key-action">Drag and drop solar panel pieces or click to place.</span>
+            </div>
+          `;
+        }
       }
-      if (sub) sub.textContent = 'Multiple micro-meteoroids punctured the cockpit viewport! Cabin air pressure is venting rapidly into the vacuum of space. Fly in zero-G or click/tap directly on breaches to apply nano-composite sealing patches before oxygen reaches 0%!';
-      if (protocols) {
-        protocols.innerHTML = `
-          <div class="protocol-item"><span>⏱️</span> <strong>TIME LIMIT:</strong> 75 Seconds</div>
-          <div class="protocol-item"><span>🎯</span> <strong>TARGET:</strong> Seal all 6 active hull punctures</div>
-          <div class="protocol-item"><span>🛡️</span> <strong>SAFEGUARD:</strong> Keep cabin pressure above 0%</div>
-        `;
-      }
-      if (guide) {
-        guide.innerHTML = `
-          <div class="board-key-row">
-            <div class="board-key-caps">
-              <span class="key-cap">W</span><span class="key-cap">A</span><span class="key-cap">S</span><span class="key-cap">D</span>
-              <span class="key-cap">◀</span><span class="key-cap">▲</span><span class="key-cap">▼</span><span class="key-cap">▶</span>
+    } else {
+      if (taskNum === 1) {
+        if (title) title.textContent = 'TASK 1: FIX AIR LEAK';
+        if (tagline) tagline.textContent = 'SPACE SURVIVAL • HULL INTEGRITY';
+        if (codeId) codeId.textContent = 'MISSION #01-AIR-SEAL';
+        if (iconWrap) iconWrap.innerHTML = '🛡️';
+        if (sub) sub.textContent = `Emergency, ${pName}! Micro-meteoroids cracked our cockpit window! Click directly on breaches or fly near them to weld patches before pressure drops!`;
+        if (protocols) {
+          protocols.innerHTML = `
+            <div class="protocol-item"><span>⏱️</span> <strong>TIME LIMIT:</strong> 75 Seconds</div>
+            <div class="protocol-item"><span>🎯</span> <strong>TARGET:</strong> Seal all 6 active hull punctures</div>
+            <div class="protocol-item"><span>🛡️</span> <strong>SAFEGUARD:</strong> Keep cabin pressure above 0%</div>
+          `;
+        }
+        if (guide) {
+          guide.innerHTML = `
+            <div class="board-key-row">
+              <span class="board-key-action">Click breaches directly OR move with WASD/Arrows and press Spacebar.</span>
             </div>
-            <span class="board-key-action">Fly Astronaut in Zero-G</span>
-          </div>
-          <div class="board-key-row">
-            <div class="board-key-caps">
-              <span class="key-cap">LEFT CLICK</span>
-              <span class="key-cap">RIGHT CLICK</span>
+          `;
+        }
+      } else if (taskNum === 2) {
+        if (title) title.textContent = 'TASK 2: COLLECT ESSENTIALS';
+        if (tagline) tagline.textContent = 'SPACE SURVIVAL • 3-LANE RUNNER';
+        if (codeId) codeId.textContent = 'MISSION #02-RUNNER';
+        if (iconWrap) iconWrap.innerHTML = '🏃';
+        if (sub) sub.textContent = `High-speed highway sprint, ${pName}! Switch lanes, jump over red lasers, and slide under yellow gantries while gathering 15 vital supplies!`;
+        if (protocols) {
+          protocols.innerHTML = `
+            <div class="protocol-item"><span>⏱️</span> <strong>TIME LIMIT:</strong> 75 Seconds</div>
+            <div class="protocol-item"><span>💎</span> <strong>GATHER:</strong> 5 O₂ + 5 Water + 5 Shields</div>
+            <div class="protocol-item"><span>⚠️</span> <strong>DODGE:</strong> Jump Lasers (Up/Space), Slide Gantries (Down)</div>
+          `;
+        }
+        if (guide) {
+          guide.innerHTML = `
+            <div class="board-key-row">
+              <span class="board-key-action">Steer: <strong>A/D or ◀/▶</strong> • Jump: <strong>W/▲/Space</strong> • Slide: <strong>S/▼</strong></span>
             </div>
-            <span class="board-key-action">Weld & Seal Breach</span>
-          </div>
-          <div class="board-key-row">
-            <div class="board-key-caps">
-              <span class="key-cap">SPACE</span>
-              <span class="key-cap">E</span>
-              <span class="key-cap">ENTER</span>
+          `;
+        }
+      } else if (taskNum === 3) {
+        if (title) title.textContent = 'TASK 3: POWER SAVE';
+        if (tagline) tagline.textContent = 'SPACE SURVIVAL • REPAIR DECK';
+        if (codeId) codeId.textContent = 'MISSION #03-POWER';
+        if (iconWrap) iconWrap.innerHTML = '⚡';
+        if (sub) sub.textContent = `Three spaceship systems are malfunctioning, ${pName}! Click blinking red rooms to connect matching colored wires, balance power sliders, and reboot keypads!`;
+        if (protocols) {
+          protocols.innerHTML = `
+            <div class="protocol-item"><span>⏱️</span> <strong>TIME LIMIT:</strong> 120 Seconds</div>
+            <div class="protocol-item"><span>🔌</span> <strong>WIRES:</strong> Drag matching colored cables</div>
+            <div class="protocol-item"><span>⚡</span> <strong>GRID:</strong> Adjust sliders into green zones</div>
+            <div class="protocol-item"><span>🔢</span> <strong>KEYPAD:</strong> Repeat flashing 4-step sequence</div>
+          `;
+        }
+        if (guide) {
+          guide.innerHTML = `
+            <div class="board-key-row">
+              <span class="board-key-action">Click flashing red room cards on the spaceship deck to solve minigames.</span>
             </div>
-            <span class="board-key-action">Seal When Near Breach</span>
-          </div>
-        `;
-      }
-    } else if (taskNum === 2) {
-      if (title) title.textContent = 'TASK 2: COLLECT ESSENTIALS';
-      if (tagline) tagline.textContent = '3-LANE LUNAR HIGHWAY RUNNER';
-      if (codeId) codeId.textContent = 'RUN-ORD #02-SUPPLY-RUN';
-      if (iconWrap) {
-        iconWrap.innerHTML = `
-          <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#00f0ff" stroke-width="2.2">
-            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-          </svg>
-        `;
-      }
-      if (sub) sub.textContent = 'High-speed Subway Surfers-style lunar runner! Steer across 3 lanes, jump over high-voltage laser barriers, and slide under industrial gantries while gathering 15 vital survival canisters!';
-      if (protocols) {
-        protocols.innerHTML = `
-          <div class="protocol-item"><span>⏱️</span> <strong>TIME LIMIT:</strong> 75 Seconds</div>
-          <div class="protocol-item"><span>💎</span> <strong>GATHER:</strong> 5 O₂ Tanks + 5 Water Ice + 5 Shielding</div>
-          <div class="protocol-item"><span>⚠️</span> <strong>DODGE:</strong> Giant Asteroids, Laser Fences & Gantries</div>
-        `;
-      }
-      if (guide) {
-        guide.innerHTML = `
-          <div class="board-key-row">
-            <div class="board-key-caps">
-              <span class="key-cap">A</span><span class="key-cap">D</span>
-              <span class="key-cap">◀</span><span class="key-cap">▶</span>
-            </div>
-            <span class="board-key-action">Switch Lanes (1 by 1)</span>
-          </div>
-          <div class="board-key-row">
-            <div class="board-key-caps">
-              <span class="key-cap">W</span>
-              <span class="key-cap">▲</span>
-              <span class="key-cap">SPACE</span>
-            </div>
-            <span class="board-key-action">High Jump Over Red Lasers</span>
-          </div>
-          <div class="board-key-row">
-            <div class="board-key-caps">
-              <span class="key-cap">S</span>
-              <span class="key-cap">▼</span>
-            </div>
-            <span class="board-key-action">Slide Under Yellow Gantries</span>
-          </div>
-        `;
-      }
-    } else if (taskNum === 3) {
-      if (title) title.textContent = 'TASK 3: POWER SAVE';
-      if (tagline) tagline.textContent = 'AMONG US-STYLE REPAIR DECK';
-      if (codeId) codeId.textContent = 'PWR-ORD #03-STATION-FIX';
-      if (iconWrap) {
-        iconWrap.innerHTML = `
-          <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#ffc837" stroke-width="2.2">
-            <circle cx="12" cy="12" r="8"></circle>
-            <line x1="12" y1="2" x2="12" y2="4"></line>
-            <line x1="12" y1="20" x2="12" y2="22"></line>
-            <circle cx="12" cy="12" r="3" fill="#ffc837"></circle>
-          </svg>
-        `;
-      }
-      if (sub) sub.textContent = 'Three critical systems across the spaceship interior have malfunctioned and are actively draining main battery reserves! Inspect the deck, click flashing red rooms, and complete wire connections, power sliders, and keypad sequences!';
-      if (protocols) {
-        protocols.innerHTML = `
-          <div class="protocol-item"><span>⏱️</span> <strong>TIME LIMIT:</strong> 120 Seconds</div>
-          <div class="protocol-item"><span>🔌</span> <strong>WIRES:</strong> Click & drag matching colored cables</div>
-          <div class="protocol-item"><span>⚡</span> <strong>GRID:</strong> Balance power sliders into target green zones</div>
-          <div class="protocol-item"><span>🔢</span> <strong>KEYPAD:</strong> Repeat 4-step reboot flashing code</div>
-        `;
-      }
-      if (guide) {
-        guide.innerHTML = `
-          <div class="board-key-row">
-            <div class="board-key-caps">
-              <span class="key-cap">CLICK ROOM</span>
-              <span class="key-cap">WASD</span>
-            </div>
-            <span class="board-key-action">Inspect Malfunctioning System</span>
-          </div>
-          <div class="board-key-row">
-            <div class="board-key-caps">
-              <span class="key-cap">MOUSE DRAG</span>
-              <span class="key-cap">TOUCH</span>
-            </div>
-            <span class="board-key-action">Drag Wire Left to Right Pin</span>
-          </div>
-          <div class="board-key-row">
-            <div class="board-key-caps">
-              <span class="key-cap">1</span><span class="key-cap">2</span><span class="key-cap">3</span><span class="key-cap">4</span>
-              <span class="key-cap">ESC</span>
-            </div>
-            <span class="board-key-action">Keypad Code / Close Panel</span>
-          </div>
-        `;
+          `;
+        }
       }
     }
 
@@ -431,8 +686,9 @@ class UIManager {
     this.showModal('briefing');
   }
 
-  showTaskComplete(taskNum, stats, onNext) {
+  showTaskComplete(levelNum, taskNum, stats, onNext) {
     if (window.soundSystem) window.soundSystem.playVictory();
+    if (window.showConfetti) window.showConfetti();
 
     const title = document.getElementById('completeTitle');
     const sub = document.getElementById('completeSubtitle');
@@ -442,21 +698,42 @@ class UIManager {
     const stat2Lbl = document.getElementById('completeStat2Lbl');
     const nextBtn = document.getElementById('btnNextTask');
 
-    if (taskNum === 1) {
-      if (title) title.textContent = 'TASK 1 COMPLETED!';
-      if (sub) sub.textContent = 'Exceptional rapid response Cadet! All hull punctures sealed with airtight nano-composite patches.';
-      if (stat1Lbl) stat1Lbl.textContent = 'Pressure Retained';
-      if (stat1Val) stat1Val.textContent = `${stats.pressureRemaining}%`;
-      if (stat2Lbl) stat2Lbl.textContent = 'Time Taken';
-      if (stat2Val) stat2Val.textContent = `${stats.timeTaken}s`;
-    } else if (taskNum === 2) {
-      if (title) title.textContent = 'TASK 2 COMPLETED!';
-      if (sub) sub.textContent = 'Outstanding navigation! All 15 vital survival resources gathered from the lunar runway.';
-      if (stat1Lbl) stat1Lbl.textContent = 'Supplies Gathered';
-      if (stat1Val) stat1Val.textContent = '15 / 15';
-      if (stat2Lbl) stat2Lbl.textContent = 'Run Time';
-      if (stat2Val) stat2Val.textContent = `${stats.timeTaken}s`;
+    const pName = (window.playerProfile && window.playerProfile.avatarName) || 'Cadet';
+
+    if (title) title.textContent = `TASK ${taskNum} COMPLETE!`;
+
+    if (levelNum === 1) {
+      if (taskNum === 1) {
+        if (sub) sub.textContent = `Superb work, ${pName}! Bio-dome oxygen stabilized cleanly at ${stats.oxygen || 21}%.`;
+        if (stat1Lbl) stat1Lbl.textContent = 'Final Oxygen';
+        if (stat1Val) stat1Val.textContent = `${stats.oxygen || 21}%`;
+      } else if (taskNum === 2) {
+        if (sub) sub.textContent = `Delicious harvest, ${pName}! 4 healthy cosmic crops ready for the space crew.`;
+        if (stat1Lbl) stat1Lbl.textContent = 'Crops Harvested';
+        if (stat1Val) stat1Val.textContent = '4 / 4';
+      } else if (taskNum === 3) {
+        if (sub) sub.textContent = `Fantastic engineering, ${pName}! Solar grid is 100% powered up!`;
+        if (stat1Lbl) stat1Lbl.textContent = 'Solar Panels';
+        if (stat1Val) stat1Val.textContent = '4 / 4';
+      }
+    } else {
+      if (taskNum === 1) {
+        if (sub) sub.textContent = `Rapid response, ${pName}! Cockpit window sealed airtight with nano-composite patches.`;
+        if (stat1Lbl) stat1Lbl.textContent = 'Cabin Pressure';
+        if (stat1Val) stat1Val.textContent = `${stats.pressureRemaining || 100}%`;
+      } else if (taskNum === 2) {
+        if (sub) sub.textContent = `Lightning speed, ${pName}! All 15 survival supply containers gathered safely.`;
+        if (stat1Lbl) stat1Lbl.textContent = 'Supplies';
+        if (stat1Val) stat1Val.textContent = '15 / 15';
+      } else if (taskNum === 3) {
+        if (sub) sub.textContent = `Ship systems restored, ${pName}! Power grid is fully functional.`;
+        if (stat1Lbl) stat1Lbl.textContent = 'Power Saved';
+        if (stat1Val) stat1Val.textContent = `${stats.powerRemaining || 100}%`;
+      }
     }
+
+    if (stat2Lbl) stat2Lbl.textContent = 'Time Taken';
+    if (stat2Val) stat2Val.textContent = `${stats.timeTaken || 15}s`;
 
     if (nextBtn) {
       nextBtn.onclick = () => {
@@ -474,9 +751,14 @@ class UIManager {
     const reasonEl = document.getElementById('gameOverReason');
     const taskEl = document.getElementById('gameOverTaskName');
     const retryBtn = document.getElementById('btnRetryTask');
+    const pName = (window.playerProfile && window.playerProfile.avatarName) || 'Cadet';
 
-    if (reasonEl) reasonEl.textContent = reason || 'Mission parameters breached.';
-    if (taskEl) taskEl.textContent = taskName || 'Space Survival';
+    if (reasonEl) reasonEl.textContent = reason || `Don't worry ${pName}, space exploration takes practice!`;
+    if (taskEl) taskEl.textContent = taskName || 'Mission Retry';
+
+    if (window.robotBuddy) {
+      window.robotBuddy.say(`Don't give up, ${pName}! You can do this! Let's try again!`, 'worried');
+    }
 
     if (retryBtn) {
       retryBtn.onclick = () => {
@@ -490,13 +772,31 @@ class UIManager {
 
   showVictory(stats, onRestart) {
     if (window.soundSystem) window.soundSystem.playVictory();
+    if (window.showConfetti) window.showConfetti(4000);
 
     const timeVal = document.getElementById('victoryTotalTime');
     const scoreVal = document.getElementById('victoryTotalScore');
     const restartBtn = document.getElementById('btnRestartMission');
+    const avatarBadge = document.getElementById('victoryAvatarBadge');
+    const pName = (window.playerProfile && window.playerProfile.avatarName) || 'Space Explorer';
 
-    if (timeVal) timeVal.textContent = `${stats.totalTime}s`;
-    if (scoreVal) scoreVal.textContent = `${stats.score} PTS`;
+    if (avatarBadge) {
+      avatarBadge.innerHTML = `
+        <span class="victory-avatar-emoji">${window.playerProfile.avatarEmoji}</span>
+        <h3>Awarded to Cadet ${pName}</h3>
+        <p>Certified Space Mission Commander</p>
+      `;
+    }
+
+    if (timeVal) timeVal.textContent = `${stats.totalTime || 45}s`;
+    if (scoreVal) scoreVal.textContent = `${stats.score || 3000} PTS`;
+
+    if (window.robotBuddy) {
+      window.robotBuddy.say(
+        `HIP-HIP-HOORAY! You completed all 3 tasks, ${pName}! You are officially a CosmoCrew Space Hero!`,
+        'celebrate'
+      );
+    }
 
     if (restartBtn) {
       restartBtn.onclick = () => {
@@ -509,4 +809,164 @@ class UIManager {
   }
 }
 
-window.UIManager = UIManager;
+/* -------------------------------------------------------------
+   MAIN GAME CONTROLLER
+   ------------------------------------------------------------- */
+class GameController {
+  constructor() {
+    this.ui = new UIManager();
+    this.currentLevel = 1;
+    this.currentTaskNum = 1;
+    this.activeTask = null;
+    this.totalLevelTime = 0;
+  }
+
+  startLevel(levelNum) {
+    this.currentLevel = levelNum;
+    this.currentTaskNum = 1;
+    this.totalLevelTime = 0;
+    this.ui.showScreen('game');
+    this.loadTask(this.currentLevel, this.currentTaskNum);
+  }
+
+  loadTask(levelNum, taskNum) {
+    if (this.activeTask && this.activeTask.stop) {
+      this.activeTask.stop();
+    }
+    this.activeTask = null;
+
+    this.currentLevel = levelNum;
+    this.currentTaskNum = taskNum;
+    this.ui.setHUDForTask(levelNum, taskNum);
+
+    // Callbacks passed to task instances
+    const callbacks = {
+      onWin: (stats) => this.handleTaskWin(stats),
+      onLose: (data) => this.handleTaskLose(data),
+      onUpdateHUD: (data) => this.handleUpdateHUD(data)
+    };
+
+    // Instantiate task
+    if (levelNum === 1) {
+      if (taskNum === 1) {
+        this.activeTask = new window.Task1OxygenRegulation(callbacks);
+      } else if (taskNum === 2) {
+        this.activeTask = new window.Task2LunarCrops('l1t2Canvas', callbacks);
+      } else if (taskNum === 3) {
+        this.activeTask = new window.Task3SolarPower(callbacks);
+      }
+    } else {
+      if (taskNum === 1) {
+        this.activeTask = new window.Task1AirLeak('t1Canvas', callbacks);
+      } else if (taskNum === 2) {
+        this.activeTask = new window.Task2SpaceRunner('runnerCanvas', callbacks);
+      } else if (taskNum === 3) {
+        this.activeTask = new window.Task3PowerSave(callbacks);
+      }
+    }
+
+    // Show Briefing before starting task
+    this.ui.showBriefing(levelNum, taskNum, () => {
+      if (this.activeTask && this.activeTask.start) {
+        this.activeTask.start();
+      }
+    });
+  }
+
+  handleTaskWin(stats) {
+    this.totalLevelTime += (stats.timeTaken || 20);
+
+    if (this.currentTaskNum < 3) {
+      this.ui.showTaskComplete(this.currentLevel, this.currentTaskNum, stats, () => {
+        this.loadTask(this.currentLevel, this.currentTaskNum + 1);
+      });
+    } else {
+      // Level Complete Victory!
+      const totalScore = Math.max(1000, 3600 - this.totalLevelTime * 15);
+      this.ui.showVictory(
+        { totalTime: this.totalLevelTime, score: totalScore },
+        () => this.quitToLevelSelect()
+      );
+    }
+  }
+
+  handleTaskLose(data) {
+    this.ui.showGameOver(data.reason, data.taskName, () => {
+      this.restartCurrentTask();
+    });
+  }
+
+  handleUpdateHUD(data) {
+    if (data.timeLeft !== undefined) {
+      this.ui.updateTimer(data.timeLeft);
+    }
+
+    // Level 2 Task 1
+    if (this.currentLevel === 2 && this.currentTaskNum === 1) {
+      const fill = document.getElementById('t1PressureFill');
+      const pct = document.getElementById('t1PressurePct');
+      const leaks = document.getElementById('t1LeaksRemaining');
+      if (fill) fill.style.width = `${data.pressure}%`;
+      if (pct) pct.textContent = `${data.pressure}%`;
+      if (leaks) leaks.textContent = `${data.leaksRemaining} / ${data.totalLeaks}`;
+    }
+
+    // Level 2 Task 2
+    if (this.currentLevel === 2 && this.currentTaskNum === 2) {
+      const o2 = document.getElementById('runnerO2Count');
+      const water = document.getElementById('runnerWaterCount');
+      const shield = document.getElementById('runnerShieldCount');
+      if (o2) o2.textContent = `${data.oxygen}/${data.targets.oxygen}`;
+      if (water) water.textContent = `${data.water}/${data.targets.water}`;
+      if (shield) shield.textContent = `${data.shield}/${data.targets.shield}`;
+
+      const pillO2 = document.getElementById('pillO2');
+      const pillWater = document.getElementById('pillWater');
+      const pillShield = document.getElementById('pillShield');
+      if (pillO2) pillO2.classList.toggle('complete', data.oxygen >= data.targets.oxygen);
+      if (pillWater) pillWater.classList.toggle('complete', data.water >= data.targets.water);
+      if (pillShield) pillShield.classList.toggle('complete', data.shield >= data.targets.shield);
+    }
+
+    // Level 2 Task 3
+    if (this.currentLevel === 2 && this.currentTaskNum === 3) {
+      const fill = document.getElementById('t3PowerFill');
+      const pct = document.getElementById('t3PowerPct');
+      const count = document.getElementById('t3RepairedCount');
+      if (fill) fill.style.width = `${data.power}%`;
+      if (pct) pct.textContent = `${data.power}%`;
+      if (count) count.textContent = `${data.repaired} / ${data.required}`;
+    }
+  }
+
+  pauseGame() {
+    if (this.activeTask && this.activeTask.pause) this.activeTask.pause();
+    this.ui.showModal('pause');
+  }
+
+  resumeGame() {
+    this.ui.closeAllModals();
+    if (this.activeTask && this.activeTask.resume) this.activeTask.resume();
+  }
+
+  restartCurrentTask() {
+    this.loadTask(this.currentLevel, this.currentTaskNum);
+  }
+
+  quitToLevelSelect() {
+    if (this.activeTask && this.activeTask.stop) this.activeTask.stop();
+    this.ui.showScreen('levelSelect');
+    if (window.soundSystem) window.soundSystem.playMusic('playful');
+  }
+
+  quitToMenu() {
+    if (this.activeTask && this.activeTask.stop) this.activeTask.stop();
+    this.ui.showScreen('title');
+  }
+}
+
+// Global initialization
+window.addEventListener('DOMContentLoaded', () => {
+  window.robotBuddy = new RobotBuddy();
+  window.game = new GameController();
+});
