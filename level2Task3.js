@@ -789,6 +789,16 @@ class Task3PowerSave {
     if (this.timerInterval) clearInterval(this.timerInterval);
     if (window.soundSystem) window.soundSystem.stopMusic();
 
+    const playerName = (window.playerProfile && window.playerProfile.avatarName) || 'Space Hero';
+    if (window.soundSystem) window.soundSystem.playVictory();
+    if (window.showConfetti) window.showConfetti();
+    if (window.robotBuddy) {
+      window.robotBuddy.say(
+        `UNBELIEVABLE, ${playerName}! All 3 ship systems are online! You completed all Space Survival missions like a true hero!`,
+        'celebrate'
+      );
+    }
+
     setTimeout(() => {
       if (this.callbacks.onWin) {
         this.callbacks.onWin({
@@ -796,7 +806,7 @@ class Task3PowerSave {
           timeTaken: 120 - this.timeLeft
         });
       }
-    }, 600);
+    }, 1400);
   }
 
   triggerGameOver(reason) {
