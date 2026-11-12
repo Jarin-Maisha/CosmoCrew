@@ -188,14 +188,6 @@ class Task1AirLeak {
       this.updateHUD();
     }, 1000);
 
-    const playerName = (window.playerProfile && window.playerProfile.avatarName) || 'Cadet';
-    if (window.robotBuddy) {
-      window.robotBuddy.say(
-        `Emergency, ${playerName}! Micro-meteoroids punctured the window! Click on cracks or fly near them to weld and seal before air runs out!`,
-        'worried'
-      );
-    }
-
     this.lastTime = performance.now();
     this.loop();
     this.updateHUD();
@@ -306,16 +298,6 @@ class Task1AirLeak {
     this.active = false;
     if (this.timerInterval) clearInterval(this.timerInterval);
 
-    const playerName = (window.playerProfile && window.playerProfile.avatarName) || 'Cadet';
-    if (window.soundSystem) window.soundSystem.playVictory();
-    if (window.showConfetti) window.showConfetti();
-    if (window.robotBuddy) {
-      window.robotBuddy.say(
-        `Awesome reflexes, ${playerName}! All 6 breaches sealed airtight! Cabin pressure stabilized!`,
-        'celebrate'
-      );
-    }
-
     setTimeout(() => {
       if (this.callbacks.onWin) {
         this.callbacks.onWin({
@@ -323,7 +305,7 @@ class Task1AirLeak {
           timeTaken: 75 - this.timeLeft
         });
       }
-    }, 1200);
+    }, 600);
   }
 
   triggerGameOver(reason) {
@@ -535,13 +517,6 @@ class Task1AirLeak {
 
   drawAstronaut(ctx) {
     const a = this.astronaut;
-    const profile = window.playerProfile || {
-      avatarId: 'cat',
-      avatarName: 'Cadet',
-      color: '#ff70a6',
-      accent: '#ff9770'
-    };
-
     ctx.save();
     ctx.translate(a.x, a.y);
     ctx.scale(a.facing, 1);
@@ -562,127 +537,27 @@ class Task1AirLeak {
     // Body
     ctx.fillStyle = '#f8fafc';
     ctx.fillRect(-10, -16, 20, 28);
-    ctx.strokeStyle = profile.color;
-    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = '#0284c7';
+    ctx.lineWidth = 2;
     ctx.strokeRect(-10, -16, 20, 28);
 
     // Helmet
     ctx.beginPath();
-    ctx.arc(0, -24, 14, 0, Math.PI * 2);
+    ctx.arc(0, -24, 13, 0, Math.PI * 2);
     ctx.fillStyle = '#f1f5f9';
     ctx.fill();
-    ctx.strokeStyle = profile.color;
-    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = '#0284c7';
+    ctx.lineWidth = 2;
     ctx.stroke();
 
-    // Cute Avatar Ears based on chosen character
-    if (profile.avatarId === 'cat') {
-      ctx.fillStyle = profile.color;
-      ctx.beginPath();
-      ctx.moveTo(-11, -34);
-      ctx.lineTo(-5, -44);
-      ctx.lineTo(0, -37);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(11, -34);
-      ctx.lineTo(5, -44);
-      ctx.lineTo(0, -37);
-      ctx.fill();
-    } else if (profile.avatarId === 'bear') {
-      ctx.fillStyle = profile.color;
-      ctx.beginPath();
-      ctx.arc(-11, -36, 5.5, 0, Math.PI * 2);
-      ctx.arc(11, -36, 5.5, 0, Math.PI * 2);
-      ctx.fill();
-    } else if (profile.avatarId === 'bunny') {
-      ctx.fillStyle = profile.color;
-      ctx.beginPath();
-      ctx.ellipse(-7, -43, 4.5, 11, -0.15, 0, Math.PI * 2);
-      ctx.ellipse(7, -43, 4.5, 11, 0.15, 0, Math.PI * 2);
-      ctx.fill();
-    } else if (profile.avatarId === 'fox') {
-      ctx.fillStyle = profile.color;
-      ctx.beginPath();
-      ctx.moveTo(-12, -33);
-      ctx.lineTo(-7, -44);
-      ctx.lineTo(-1, -36);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(12, -33);
-      ctx.lineTo(7, -44);
-      ctx.lineTo(1, -36);
-      ctx.fill();
-    }
-
-    // Cute Animal Tail behind suit
-    if (profile.avatarId === 'cat') {
-      ctx.strokeStyle = profile.color;
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.moveTo(-10, 4);
-      ctx.quadraticCurveTo(-18, -4, -14, -12);
-      ctx.stroke();
-    } else if (profile.avatarId === 'bear') {
-      ctx.fillStyle = '#c47c48';
-      ctx.beginPath();
-      ctx.arc(-11, 4, 4, 0, Math.PI * 2);
-      ctx.fill();
-    } else if (profile.avatarId === 'bunny') {
-      ctx.fillStyle = '#f8fafc';
-      ctx.beginPath();
-      ctx.arc(-11, 4, 4.5, 0, Math.PI * 2);
-      ctx.fill();
-    } else if (profile.avatarId === 'fox') {
-      ctx.fillStyle = '#e85d04';
-      ctx.beginPath();
-      ctx.ellipse(-14, 2, 6, 10, 0.5, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // Transparent Visor Glass
+    // Visor
     ctx.beginPath();
-    ctx.ellipse(3, -24, 10, 8, 0, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(0, 240, 255, 0.25)';
+    ctx.ellipse(4, -24, 8, 6, 0, 0, Math.PI * 2);
+    ctx.fillStyle = '#00f0ff';
+    ctx.shadowColor = '#00f0ff';
+    ctx.shadowBlur = 8;
     ctx.fill();
-    ctx.strokeStyle = '#00f0ff';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-
-    // Cute Animal Face inside Helmet
-    if (profile.avatarId === 'bunny') {
-      ctx.fillStyle = '#f8fafc';
-      ctx.beginPath(); ctx.ellipse(4, -23, 6, 5, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#0f172a';
-      ctx.beginPath(); ctx.arc(3, -24, 1.2, 0, Math.PI * 2); ctx.arc(6.5, -24, 1.2, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#ff70a6';
-      ctx.beginPath(); ctx.arc(5, -22.5, 1, 0, Math.PI * 2); ctx.fill();
-    } else if (profile.avatarId === 'cat') {
-      ctx.fillStyle = '#fff0f3';
-      ctx.beginPath(); ctx.ellipse(4, -23, 6, 5, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#0f172a';
-      ctx.beginPath(); ctx.arc(3, -24, 1.2, 0, Math.PI * 2); ctx.arc(6.5, -24, 1.2, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#ff4d6d';
-      ctx.beginPath(); ctx.arc(5, -22.5, 1, 0, Math.PI * 2); ctx.fill();
-    } else if (profile.avatarId === 'bear') {
-      ctx.fillStyle = '#d48c58';
-      ctx.beginPath(); ctx.ellipse(4, -23, 6, 5, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#0f172a';
-      ctx.beginPath(); ctx.arc(3, -24, 1.2, 0, Math.PI * 2); ctx.arc(6.5, -24, 1.2, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(5, -22.5, 1, 0, Math.PI * 2); ctx.fill();
-    } else if (profile.avatarId === 'fox') {
-      ctx.fillStyle = '#f48c06';
-      ctx.beginPath(); ctx.ellipse(4, -23, 6, 5, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#0f172a';
-      ctx.beginPath(); ctx.arc(3, -24, 1.2, 0, Math.PI * 2); ctx.arc(6.5, -24, 1.2, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(5, -22.5, 1, 0, Math.PI * 2); ctx.fill();
-    }
-
-    // Visor glass glint
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.arc(1, -26, 3.5, Math.PI * 1.1, Math.PI * 1.7);
-    ctx.stroke();
+    ctx.shadowBlur = 0;
 
     // Laser welding torch in hand
     ctx.strokeStyle = '#ffc837';
