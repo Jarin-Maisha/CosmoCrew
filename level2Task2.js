@@ -237,14 +237,6 @@ class Task2SpaceRunner {
       this.updateHUD();
     }, 1000);
 
-    const playerName = (window.playerProfile && window.playerProfile.avatarName) || 'Runner';
-    if (window.robotBuddy) {
-      window.robotBuddy.say(
-        `Run ${playerName}! Arrow keys or A/D to steer, Up/Space to JUMP red lasers, Down to SLIDE yellow gantries! Gather 5 O₂, 5 Water, 5 Shields!`,
-        'excited'
-      );
-    }
-
     this.lastTime = performance.now();
     this.loop();
     this.updateHUD();
@@ -267,16 +259,6 @@ class Task2SpaceRunner {
     if (this.timerInterval) clearInterval(this.timerInterval);
     if (window.soundSystem) window.soundSystem.stopMusic();
 
-    const playerName = (window.playerProfile && window.playerProfile.avatarName) || 'Runner';
-    if (window.soundSystem) window.soundSystem.playVictory();
-    if (window.showConfetti) window.showConfetti();
-    if (window.robotBuddy) {
-      window.robotBuddy.say(
-        `Incredible sprint, ${playerName}! All 15 survival items collected from the lunar highway!`,
-        'celebrate'
-      );
-    }
-
     setTimeout(() => {
       if (this.callbacks.onWin) {
         this.callbacks.onWin({
@@ -284,7 +266,7 @@ class Task2SpaceRunner {
           collected: this.resources
         });
       }
-    }, 1200);
+    }, 600);
   }
 
   triggerGameOver(reason) {
@@ -1022,122 +1004,22 @@ class Task2SpaceRunner {
     ctx.arc(0, -68, 17, 0, Math.PI * 2);
     ctx.fillStyle = '#f1f5f9';
     ctx.fill();
-    const profile = window.playerProfile || { avatarId: 'cat', color: '#ff70a6' };
-    ctx.strokeStyle = profile.color;
-    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = '#0284c7';
+    ctx.lineWidth = 2;
     ctx.stroke();
 
-    // Cute Avatar Ears based on chosen character
-    if (profile.avatarId === 'cat') {
-      ctx.fillStyle = profile.color;
-      ctx.beginPath();
-      ctx.moveTo(-13, -79);
-      ctx.lineTo(-7, -91);
-      ctx.lineTo(-1, -82);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(13, -79);
-      ctx.lineTo(7, -91);
-      ctx.lineTo(1, -82);
-      ctx.fill();
-    } else if (profile.avatarId === 'bear') {
-      ctx.fillStyle = profile.color;
-      ctx.beginPath();
-      ctx.arc(-13, -82, 6, 0, Math.PI * 2);
-      ctx.arc(13, -82, 6, 0, Math.PI * 2);
-      ctx.fill();
-    } else if (profile.avatarId === 'bunny') {
-      ctx.fillStyle = profile.color;
-      ctx.beginPath();
-      ctx.ellipse(-8, -90, 5, 13, -0.12, 0, Math.PI * 2);
-      ctx.ellipse(8, -90, 5, 13, 0.12, 0, Math.PI * 2);
-      ctx.fill();
-    } else if (profile.avatarId === 'fox') {
-      ctx.fillStyle = profile.color;
-      ctx.beginPath();
-      ctx.moveTo(-14, -79);
-      ctx.lineTo(-8, -92);
-      ctx.lineTo(-2, -82);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(14, -79);
-      ctx.lineTo(8, -92);
-      ctx.lineTo(2, -82);
-      ctx.fill();
-    }
-
-    // Cute Animal Tail behind suit
-    if (profile.avatarId === 'cat') {
-      ctx.strokeStyle = profile.color;
-      ctx.lineWidth = 3.5;
-      ctx.beginPath();
-      ctx.moveTo(-12, -35);
-      ctx.quadraticCurveTo(-22, -45, -16, -55);
-      ctx.stroke();
-    } else if (profile.avatarId === 'bear') {
-      ctx.fillStyle = '#c47c48';
-      ctx.beginPath();
-      ctx.arc(-14, -35, 5, 0, Math.PI * 2);
-      ctx.fill();
-    } else if (profile.avatarId === 'bunny') {
-      ctx.fillStyle = '#f8fafc';
-      ctx.beginPath();
-      ctx.arc(-14, -35, 6, 0, Math.PI * 2);
-      ctx.fill();
-    } else if (profile.avatarId === 'fox') {
-      ctx.fillStyle = '#e85d04';
-      ctx.beginPath();
-      ctx.ellipse(-18, -35, 8, 14, 0.6, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      ctx.arc(-22, -45, 4, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // Visor (Transparent bubble with cyan tint)
+    // Visor (Shiny gold-cyan reflective mirror glass)
     ctx.beginPath();
-    ctx.ellipse(0, -68, 13, 10, 0, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(0, 240, 255, 0.25)';
+    ctx.ellipse(0, -68, 12, 9, 0, 0, Math.PI * 2);
+    const visorGrad = ctx.createLinearGradient(-10, -75, 10, -60);
+    visorGrad.addColorStop(0, '#00f0ff');
+    visorGrad.addColorStop(0.5, '#0284c7');
+    visorGrad.addColorStop(1, '#ffc837');
+    ctx.fillStyle = visorGrad;
+    ctx.shadowColor = '#00f0ff';
+    ctx.shadowBlur = 8;
     ctx.fill();
-    ctx.strokeStyle = '#00f0ff';
-    ctx.lineWidth = 1.8;
-    ctx.stroke();
-
-    // Cute Animal Face inside Helmet
-    if (profile.avatarId === 'bunny') {
-      ctx.fillStyle = '#f8fafc';
-      ctx.beginPath(); ctx.ellipse(0, -67, 8, 7, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#0f172a';
-      ctx.beginPath(); ctx.arc(-3.5, -68, 1.5, 0, Math.PI * 2); ctx.arc(3.5, -68, 1.5, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#ffb4a2';
-      ctx.beginPath(); ctx.arc(-5.5, -66, 2, 0, Math.PI * 2); ctx.arc(5.5, -66, 2, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#ff70a6';
-      ctx.beginPath(); ctx.arc(0, -66.5, 1.2, 0, Math.PI * 2); ctx.fill();
-    } else if (profile.avatarId === 'cat') {
-      ctx.fillStyle = '#fff0f3';
-      ctx.beginPath(); ctx.ellipse(0, -67, 8, 7, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#0f172a';
-      ctx.beginPath(); ctx.arc(-3.5, -68, 1.5, 0, Math.PI * 2); ctx.arc(3.5, -68, 1.5, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#ff4d6d';
-      ctx.beginPath(); ctx.arc(0, -66.5, 1.2, 0, Math.PI * 2); ctx.fill();
-    } else if (profile.avatarId === 'bear') {
-      ctx.fillStyle = '#d48c58';
-      ctx.beginPath(); ctx.ellipse(0, -67, 8, 7, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#ffe8d6';
-      ctx.beginPath(); ctx.ellipse(0, -66, 4.5, 3.5, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#0f172a';
-      ctx.beginPath(); ctx.arc(-3.5, -68, 1.5, 0, Math.PI * 2); ctx.arc(3.5, -68, 1.5, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(0, -66.5, 1.2, 0, Math.PI * 2); ctx.fill();
-    } else if (profile.avatarId === 'fox') {
-      ctx.fillStyle = '#f48c06';
-      ctx.beginPath(); ctx.ellipse(0, -67, 8, 7, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath(); ctx.ellipse(0, -65, 5, 3.5, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#0f172a';
-      ctx.beginPath(); ctx.arc(-3.5, -68, 1.5, 0, Math.PI * 2); ctx.arc(3.5, -68, 1.5, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(0, -66.5, 1.2, 0, Math.PI * 2); ctx.fill();
-    }
+    ctx.shadowBlur = 0;
 
     // Visor reflection glint
     ctx.beginPath();
