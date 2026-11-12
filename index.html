@@ -1,0 +1,1938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>CosmoCrew - Space Adventure</title>
+  <style>
+    /* =========================================================
+       COSMOCREW GLOBAL THEME - COLOURFUL, FUN & CHILD-FRIENDLY
+       ========================================================= */
+    :root {
+      --bg-space: #070b1e;
+      --bg-panel: rgba(16, 24, 52, 0.92);
+      --bg-card: rgba(26, 38, 80, 0.85);
+      --accent-cyan: #00f0ff;
+      --accent-pink: #ff70a6;
+      --accent-gold: #ffd166;
+      --accent-green: #06d6a0;
+      --accent-red: #ff4d6d;
+      --accent-orange: #ff9770;
+      --accent-purple: #9d4edd;
+      --text-main: #ffffff;
+      --text-sub: #cbd5e1;
+      --font-stack: 'Fredoka', 'Quicksand', 'Nunito', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-space);
+      color: var(--text-main);
+      font-family: var(--font-stack);
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+    }
+
+    /* Cosmic Animated Starfield Background */
+    .space-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background: radial-gradient(circle at 50% 20%, #151f4c 0%, #080c24 60%, #030612 100%);
+      overflow: hidden;
+    }
+
+    .star {
+      position: absolute;
+      background: #ffffff;
+      border-radius: 50%;
+      animation: twinkle 3s infinite ease-in-out;
+    }
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.3; transform: scale(0.8); }
+      50% { opacity: 1; transform: scale(1.3); }
+    }
+
+    .planet-bg {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      filter: blur(0.5px);
+    }
+    .planet-1 {
+      top: -40px; right: 5%;
+      width: 140px; height: 140px;
+      background: radial-gradient(circle at 35% 35%, #ffd166, #ff9770 60%, #9d4edd 100%);
+      box-shadow: 0 0 35px rgba(255, 209, 102, 0.4);
+      opacity: 0.85;
+    }
+    .planet-2 {
+      bottom: 8%; left: 3%;
+      width: 110px; height: 110px;
+      background: radial-gradient(circle at 35% 35%, #00f0ff, #0284c7 65%, #03045e 100%);
+      box-shadow: 0 0 30px rgba(0, 240, 255, 0.35);
+      opacity: 0.8;
+    }
+
+    /* Screen Management */
+    .game-screen {
+      position: absolute;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+      z-index: 10;
+      overflow-y: auto;
+    }
+    .game-screen.active {
+      display: flex;
+    }
+
+    /* Common Buttons */
+    .btn {
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 1.1rem;
+      padding: 12px 28px;
+      border-radius: 50px;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .btn:hover {
+      transform: translateY(-3px) scale(1.03);
+    }
+    .btn:active {
+      transform: translateY(1px) scale(0.98);
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #00f0ff, #0077b6);
+      color: #030b20;
+      box-shadow: 0 0 20px rgba(0, 240, 255, 0.5);
+    }
+    .btn-gold {
+      background: linear-gradient(135deg, #ffd166, #ff9770);
+      color: #2b1100;
+      box-shadow: 0 0 22px rgba(255, 209, 102, 0.55);
+    }
+    .btn-green {
+      background: linear-gradient(135deg, #06d6a0, #00b4d8);
+      color: #02251a;
+      box-shadow: 0 0 20px rgba(6, 214, 160, 0.45);
+    }
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+      border: 2px solid rgba(255, 255, 255, 0.25);
+    }
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.22);
+    }
+    .btn.pulse {
+      animation: btnPulse 1.4s infinite alternate;
+    }
+    @keyframes btnPulse {
+      0% { box-shadow: 0 0 10px rgba(6, 214, 160, 0.4); transform: scale(1); }
+      100% { box-shadow: 0 0 28px rgba(6, 214, 160, 0.9); transform: scale(1.05); }
+    }
+
+    /* =========================================================
+       1. OPENING / TITLE SCREEN
+       ========================================================= */
+    #screenTitle {
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .title-logo-wrap {
+      margin-bottom: 20px;
+      animation: floatLogo 3.5s ease-in-out infinite;
+    }
+    @keyframes floatLogo {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    .title-logo-badge {
+      display: inline-block;
+      background: rgba(0, 240, 255, 0.15);
+      color: var(--accent-cyan);
+      border: 1.5px solid var(--accent-cyan);
+      padding: 6px 18px;
+      border-radius: 30px;
+      font-size: 0.9rem;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      margin-bottom: 8px;
+    }
+    .title-heading {
+      font-size: 3.4rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, #ffffff 20%, #00f0ff 60%, #ff70a6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 35px rgba(0, 240, 255, 0.4);
+      letter-spacing: 2px;
+    }
+    .title-subheading {
+      font-size: 1.15rem;
+      color: var(--text-sub);
+      margin-top: 4px;
+    }
+
+    /* Avatar Selection Deck */
+    .avatar-selection-box {
+      background: var(--bg-panel);
+      border: 2px solid rgba(0, 240, 255, 0.35);
+      border-radius: 24px;
+      padding: 22px 28px;
+      max-width: 660px;
+      width: 100%;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), inset 0 0 30px rgba(0, 240, 255, 0.06);
+      backdrop-filter: blur(12px);
+      margin-bottom: 22px;
+    }
+    .avatar-box-title {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: var(--accent-gold);
+      margin-bottom: 14px;
+    }
+    .avatar-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .avatar-option {
+      background: var(--bg-card);
+      border: 3px solid transparent;
+      border-radius: 18px;
+      padding: 12px 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+    .avatar-option:hover {
+      transform: translateY(-4px);
+      border-color: rgba(255, 255, 255, 0.4);
+    }
+    .avatar-option.selected {
+      border-color: var(--accent-cyan);
+      background: rgba(0, 240, 255, 0.18);
+      box-shadow: 0 0 20px rgba(0, 240, 255, 0.45);
+      transform: translateY(-4px) scale(1.03);
+    }
+    .avatar-icon-img {
+      font-size: 2.8rem;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .avatar-svg {
+      width: 72px;
+      height: 72px;
+      display: block;
+      margin: 0 auto 6px;
+      filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
+      transition: transform 0.2s ease;
+    }
+    .avatar-option:hover .avatar-svg {
+      transform: scale(1.08);
+    }
+    .avatar-option.selected .avatar-svg {
+      transform: scale(1.12);
+      filter: drop-shadow(0 0 12px rgba(0, 240, 255, 0.6));
+    }
+    .avatar-meet-preview {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 14px;
+      font-size: 0.98rem;
+      color: var(--accent-gold);
+      font-weight: 800;
+      background: rgba(0, 0, 0, 0.35);
+      padding: 8px 16px;
+      border-radius: 20px;
+    }
+    .avatar-label-name {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: #ffffff;
+    }
+    .avatar-label-type {
+      font-size: 0.75rem;
+      color: var(--text-sub);
+    }
+
+    /* Name Input */
+    .name-input-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      background: rgba(0, 0, 0, 0.35);
+      border-radius: 50px;
+      padding: 6px 18px;
+      border: 1.5px solid rgba(0, 240, 255, 0.3);
+      max-width: 420px;
+      margin: 0 auto;
+    }
+    .name-input-label {
+      font-weight: 800;
+      font-size: 0.95rem;
+      color: var(--accent-cyan);
+      white-space: nowrap;
+    }
+    .name-input-field {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #ffffff;
+      font-family: inherit;
+      font-weight: 800;
+      font-size: 1.15rem;
+      width: 100%;
+    }
+
+    /* Cute Animated Rocket on Title Screen */
+    .rocket-launchpad-wrap {
+      position: relative;
+      width: 120px;
+      height: 140px;
+      margin: 0 auto 16px;
+    }
+    .title-rocket {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    .title-rocket svg {
+      width: 90px;
+      height: 120px;
+      filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.4));
+    }
+    .rocket-flames {
+      opacity: 0.7;
+      animation: flickerFlames 0.15s infinite alternate;
+    }
+    @keyframes flickerFlames {
+      0% { transform: scaleY(0.85); opacity: 0.6; }
+      100% { transform: scaleY(1.2); opacity: 1; }
+    }
+
+    /* Launching blastoff animation */
+    .title-rocket.launching {
+      animation: blastOff 1.25s forwards cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    @keyframes blastOff {
+      0% { transform: translateX(-50%) translateY(0); }
+      20% { transform: translateX(-52%) translateY(5px); }
+      35% { transform: translateX(-48%) translateY(-15px); }
+      100% { transform: translateX(180%) translateY(-700px) rotate(22deg) scale(0.3); opacity: 0; }
+    }
+
+    /* =========================================================
+       2. LEVEL SELECTION SCREEN
+       ========================================================= */
+    #screenLevelSelect {
+      align-items: center;
+      justify-content: center;
+      padding: 30px 20px;
+    }
+    .level-select-header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .avatar-status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--bg-panel);
+      border: 2px solid var(--accent-cyan);
+      padding: 8px 22px;
+      border-radius: 40px;
+      margin-bottom: 12px;
+      font-size: 1.1rem;
+      box-shadow: 0 0 20px rgba(0, 240, 255, 0.25);
+    }
+    .avatar-badge-emoji {
+      font-size: 1.5rem;
+    }
+    .level-select-title {
+      font-size: 2.5rem;
+      font-weight: 900;
+      color: #ffffff;
+      text-shadow: 0 0 25px rgba(255, 209, 102, 0.4);
+    }
+
+    .level-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 28px;
+      max-width: 900px;
+      width: 100%;
+      margin-bottom: 24px;
+    }
+    .level-card {
+      background: var(--bg-panel);
+      border: 3px solid rgba(255, 255, 255, 0.15);
+      border-radius: 28px;
+      padding: 28px 24px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4);
+    }
+    .level-card:hover {
+      transform: translateY(-8px) scale(1.02);
+      border-color: var(--accent-cyan);
+      box-shadow: 0 18px 45px rgba(0, 240, 255, 0.35);
+    }
+    .level-card.card-level-1:hover {
+      border-color: var(--accent-green);
+      box-shadow: 0 18px 45px rgba(6, 214, 160, 0.35);
+    }
+    .level-card-planet-icon {
+      font-size: 4.5rem;
+      margin-bottom: 12px;
+      filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.5));
+    }
+    .level-card-tag {
+      font-size: 0.8rem;
+      font-weight: 800;
+      letter-spacing: 1.2px;
+      padding: 4px 14px;
+      border-radius: 20px;
+      margin-bottom: 8px;
+    }
+    .card-level-1 .level-card-tag {
+      background: rgba(6, 214, 160, 0.2);
+      color: var(--accent-green);
+      border: 1px solid var(--accent-green);
+    }
+    .card-level-2 .level-card-tag {
+      background: rgba(0, 240, 255, 0.2);
+      color: var(--accent-cyan);
+      border: 1px solid var(--accent-cyan);
+    }
+    .level-card-name {
+      font-size: 1.6rem;
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+    .level-card-desc {
+      font-size: 0.95rem;
+      color: var(--text-sub);
+      margin-bottom: 16px;
+      line-height: 1.4;
+    }
+    .level-tasks-list {
+      background: rgba(0, 0, 0, 0.35);
+      border-radius: 16px;
+      padding: 12px 16px;
+      width: 100%;
+      text-align: left;
+      font-size: 0.88rem;
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .level-task-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* =========================================================
+       3. TOP HUD & GAMEPLAY DECK
+       ========================================================= */
+    .top-hud {
+      background: rgba(10, 16, 38, 0.94);
+      border-bottom: 2px solid rgba(0, 240, 255, 0.25);
+      padding: 10px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      z-index: 100;
+      backdrop-filter: blur(8px);
+    }
+    .hud-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .hud-avatar-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0, 240, 255, 0.15);
+      border: 1.5px solid var(--accent-cyan);
+      padding: 6px 14px;
+      border-radius: 30px;
+      font-weight: 800;
+      font-size: 0.95rem;
+    }
+    .hud-mission-info {
+      display: flex;
+      flex-direction: column;
+    }
+    .hud-task-tag {
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: var(--accent-gold);
+      letter-spacing: 1px;
+    }
+    .hud-task-name {
+      font-size: 1.15rem;
+      font-weight: 900;
+      color: #ffffff;
+    }
+
+    /* Center step progression */
+    .hud-center {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .hud-step-dot {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.15);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--text-sub);
+    }
+    .hud-step-dot.active {
+      background: var(--accent-cyan);
+      border-color: #ffffff;
+      color: #030a1c;
+      box-shadow: 0 0 12px var(--accent-cyan);
+    }
+    .hud-step-dot.completed {
+      background: var(--accent-green);
+      border-color: #ffffff;
+      color: #02251a;
+    }
+    .hud-step-line {
+      width: 24px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 2px;
+    }
+    .hud-step-line.done {
+      background: var(--accent-green);
+    }
+
+    /* Right side timer & sound controls */
+    .hud-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .hud-timer-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(0, 0, 0, 0.4);
+      border: 2px solid var(--accent-cyan);
+      padding: 6px 14px;
+      border-radius: 30px;
+      font-weight: 900;
+      font-size: 1.15rem;
+    }
+    .hud-timer-badge.warning {
+      border-color: var(--accent-red);
+      color: var(--accent-red);
+      animation: timerAlert 0.8s infinite alternate;
+    }
+    @keyframes timerAlert {
+      0% { transform: scale(1); box-shadow: 0 0 0 rgba(255, 77, 109, 0); }
+      100% { transform: scale(1.06); box-shadow: 0 0 16px rgba(255, 77, 109, 0.8); }
+    }
+
+    .hud-icon-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1.5px solid rgba(255, 255, 255, 0.25);
+      color: #ffffff;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .hud-icon-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    .hud-icon-btn.muted {
+      opacity: 0.5;
+    }
+
+    /* Sub-HUD Task-specific items */
+    .sub-hud-bar {
+      background: rgba(14, 22, 50, 0.85);
+      border-bottom: 1.5px solid rgba(0, 240, 255, 0.15);
+      padding: 8px 24px;
+      display: none;
+      align-items: center;
+      justify-content: space-around;
+      gap: 20px;
+      font-size: 0.95rem;
+      font-weight: 800;
+    }
+    .hud-stat-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .hud-bar-wrap {
+      width: 140px;
+      height: 12px;
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .hud-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #00f0ff, #06d6a0);
+      transition: width 0.3s ease;
+    }
+    .hud-bar-fill.critical {
+      background: linear-gradient(90deg, #ff4d6d, #ffbe0b);
+    }
+
+    /* Game Content Viewport */
+    .game-content-view {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Task Specific Views */
+    .task-view-container {
+      position: absolute;
+      inset: 0;
+      display: none;
+    }
+
+    /* =========================================================
+       ROBOT BUDDY WIDGET & SPEECH BUBBLE
+       ========================================================= */
+    #robotBuddyWidget {
+      position: fixed;
+      bottom: 20px;
+      left: 24px;
+      z-index: 200;
+      display: flex;
+      align-items: flex-end;
+      gap: 14px;
+      pointer-events: none;
+    }
+    #robotBuddyWidget.bounce {
+      animation: robotHop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes robotHop {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-16px); }
+    }
+
+    .robot-figure {
+      width: 80px;
+      height: 95px;
+      position: relative;
+      filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.5));
+      animation: robotHover 3s infinite ease-in-out;
+    }
+    @keyframes robotHover {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+    .robot-screen {
+      position: absolute;
+      top: 24px; left: 16px;
+      width: 48px; height: 32px;
+      background: #020617;
+      border-radius: 10px;
+      border: 2px solid #00f0ff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 0 8px rgba(0, 240, 255, 0.4);
+    }
+    .robot-eyes {
+      font-family: monospace;
+      font-weight: 900;
+      font-size: 1.1rem;
+      color: #00f0ff;
+      letter-spacing: 2px;
+      text-shadow: 0 0 8px #00f0ff;
+    }
+    .robot-eyes.happy { color: #06d6a0; text-shadow: 0 0 8px #06d6a0; }
+    .robot-eyes.worried { color: #ffbe0b; text-shadow: 0 0 8px #ffbe0b; }
+    .robot-eyes.celebrate { color: #ff70a6; text-shadow: 0 0 8px #ff70a6; }
+
+    .robot-speech-bubble {
+      background: rgba(14, 22, 52, 0.96);
+      border: 2.5px solid var(--accent-cyan);
+      border-radius: 20px 20px 20px 4px;
+      padding: 12px 18px;
+      max-width: 380px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 18px rgba(0, 240, 255, 0.25);
+      backdrop-filter: blur(8px);
+      opacity: 0;
+      transform: translateY(10px) scale(0.95);
+      transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      pointer-events: auto;
+    }
+    .robot-speech-bubble.visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    .robot-buddy-name {
+      font-size: 0.8rem;
+      font-weight: 900;
+      color: var(--accent-gold);
+      letter-spacing: 0.5px;
+      margin-bottom: 2px;
+    }
+    .robot-speech-text {
+      font-size: 0.98rem;
+      line-height: 1.35;
+      color: #ffffff;
+      font-weight: 700;
+    }
+
+    /* =========================================================
+       4. LEVEL 1 TASK 1: OXYGEN REGULATION VIEW
+       ========================================================= */
+    #l1t1View {
+      padding: 30px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .o2-console-card {
+      background: var(--bg-panel);
+      border: 3px solid rgba(0, 240, 255, 0.35);
+      border-radius: 30px;
+      padding: 32px 36px;
+      max-width: 720px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 16px 45px rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(14px);
+    }
+    .o2-header {
+      margin-bottom: 20px;
+    }
+    .o2-header h2 {
+      font-size: 2rem;
+      font-weight: 900;
+      color: #ffffff;
+      margin-bottom: 6px;
+    }
+    .o2-header p {
+      color: var(--text-sub);
+      font-size: 1.05rem;
+    }
+
+    .status-banner {
+      padding: 12px 20px;
+      border-radius: 16px;
+      font-weight: 800;
+      font-size: 1.05rem;
+      margin-bottom: 24px;
+      transition: all 0.3s ease;
+    }
+    .status-banner.danger {
+      background: rgba(255, 77, 109, 0.2);
+      border: 2px solid var(--accent-red);
+      color: #ffb3c1;
+    }
+    .status-banner.safe {
+      background: rgba(6, 214, 160, 0.2);
+      border: 2px solid var(--accent-green);
+      color: #b7efc5;
+    }
+
+    .o2-meter-display {
+      font-size: 3.8rem;
+      font-weight: 900;
+      color: var(--accent-cyan);
+      margin-bottom: 16px;
+      text-shadow: 0 0 25px rgba(0, 240, 255, 0.4);
+    }
+
+    /* Visual Track with Safe Zone (19%-23%) */
+    .gauge-track-container {
+      position: relative;
+      height: 32px;
+      background: #111936;
+      border-radius: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      margin: 0 auto 28px;
+      overflow: hidden;
+    }
+    .zone-danger-low {
+      position: absolute;
+      left: 0; width: 19%; height: 100%;
+      background: linear-gradient(90deg, rgba(255, 77, 109, 0.7), rgba(255, 77, 109, 0.4));
+    }
+    .zone-safe {
+      position: absolute;
+      left: 19%; width: 5%; height: 100%;
+      background: linear-gradient(90deg, #06d6a0, #38b000);
+      box-shadow: 0 0 16px rgba(6, 214, 160, 0.8);
+      z-index: 2;
+    }
+    .zone-danger-high {
+      position: absolute;
+      left: 24%; width: 76%; height: 100%;
+      background: linear-gradient(90deg, rgba(255, 77, 109, 0.4), rgba(255, 77, 109, 0.7));
+    }
+    .gauge-needle {
+      position: absolute;
+      top: -4px;
+      width: 8px;
+      height: 40px;
+      background: #ffffff;
+      border-radius: 4px;
+      box-shadow: 0 0 10px #ffffff;
+      transform: translateX(-50%);
+      z-index: 5;
+      transition: left 0.1s ease-out;
+    }
+
+    .slider-input-large {
+      width: 100%;
+      height: 20px;
+      -webkit-appearance: none;
+      background: transparent;
+      outline: none;
+      margin-bottom: 24px;
+      cursor: pointer;
+    }
+    .slider-input-large::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--accent-cyan);
+      border: 3px solid #ffffff;
+      box-shadow: 0 0 16px var(--accent-cyan);
+      cursor: pointer;
+      transition: transform 0.1s ease;
+    }
+    .slider-input-large::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+    }
+
+    /* =========================================================
+       5. LEVEL 1 TASK 2: LUNAR CROPS VIEW
+       ========================================================= */
+    #l1t2View {
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+    #l1t2Canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .farm-action-btn-bar {
+      position: absolute;
+      bottom: 24px;
+      right: 28px;
+      z-index: 50;
+      display: flex;
+      gap: 12px;
+    }
+
+    /* =========================================================
+       6. LEVEL 1 TASK 3: SOLAR POWER VIEW
+       ========================================================= */
+    #l1t3View {
+      width: 100%;
+      height: 100%;
+      padding: 24px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .solar-play-board {
+      display: flex;
+      gap: 28px;
+      max-width: 960px;
+      width: 100%;
+      height: 85%;
+    }
+    .solar-terrain-grid {
+      flex: 2;
+      background: var(--bg-panel);
+      border: 2px solid rgba(0, 240, 255, 0.3);
+      border-radius: 24px;
+      padding: 20px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: 16px;
+    }
+    .terrain-slot {
+      border-radius: 18px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      border: 2px dashed rgba(255, 255, 255, 0.2);
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    .terrain-slot.fertile {
+      background: rgba(6, 214, 160, 0.15);
+      border-color: var(--accent-green);
+      border-style: solid;
+    }
+    .terrain-slot.barren {
+      background: rgba(51, 65, 85, 0.4);
+      border-color: rgba(255, 209, 102, 0.4);
+    }
+    .terrain-slot.barren.drag-hover {
+      background: rgba(0, 240, 255, 0.25);
+      border-color: var(--accent-cyan);
+      transform: scale(1.02);
+    }
+    .terrain-slot.barren.occupied {
+      background: rgba(2, 62, 138, 0.5);
+      border: 2.5px solid var(--accent-gold);
+      border-style: solid;
+      box-shadow: 0 0 18px rgba(255, 209, 102, 0.3);
+    }
+
+    .solar-piece-tray {
+      flex: 1;
+      background: var(--bg-panel);
+      border: 2px solid rgba(255, 209, 102, 0.35);
+      border-radius: 24px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+    }
+    .solar-piece {
+      background: var(--bg-card);
+      border: 2px solid var(--accent-cyan);
+      border-radius: 16px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: grab;
+      transition: all 0.2s ease;
+    }
+    .solar-piece:active { cursor: grabbing; }
+    .solar-piece:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent-gold);
+    }
+    .solar-piece.selected {
+      border-color: var(--accent-gold);
+      background: rgba(255, 209, 102, 0.2);
+      box-shadow: 0 0 16px rgba(255, 209, 102, 0.4);
+    }
+
+    /* =========================================================
+       7. LEVEL 2 VIEWS (Air Leak, Runner, Power Deck)
+       ========================================================= */
+    #task1View, #task2View, #task3View {
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+    #t1Canvas, #runnerCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .hull-vignette {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      box-shadow: inset 0 0 100px rgba(255, 77, 109, 0.4);
+      display: none;
+    }
+    .hull-vignette.active { display: block; }
+
+    /* On-Screen Touch D-pad / Buttons for Level 2 Runner */
+    .runner-touch-controls {
+      position: absolute;
+      bottom: 20px;
+      left: 0; right: 0;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 30px;
+      pointer-events: none;
+      z-index: 40;
+    }
+    .touch-btn {
+      width: 65px;
+      height: 65px;
+      border-radius: 50%;
+      background: rgba(14, 22, 52, 0.85);
+      border: 2px solid var(--accent-cyan);
+      color: #ffffff;
+      font-size: 1.6rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: auto;
+      cursor: pointer;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.5);
+    }
+    .touch-btn:active {
+      transform: scale(0.92);
+      background: var(--accent-cyan);
+      color: #030816;
+    }
+
+    /* Spaceship Deck for Task 3 */
+    #spaceshipDeck {
+      width: 100%;
+      height: 100%;
+      padding: 30px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: 20px;
+      align-items: center;
+      justify-content: center;
+    }
+    .station-card {
+      background: var(--bg-panel);
+      border: 3px solid rgba(255, 255, 255, 0.2);
+      border-radius: 24px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+    }
+    .station-card:hover {
+      transform: scale(1.04);
+      border-color: var(--accent-cyan);
+    }
+    .station-card.malfunctioning {
+      border-color: var(--accent-red);
+      background: rgba(255, 77, 109, 0.15);
+      animation: alertPulse 1.2s infinite alternate;
+    }
+    @keyframes alertPulse {
+      0% { box-shadow: 0 0 10px rgba(255, 77, 109, 0.3); }
+      100% { box-shadow: 0 0 28px rgba(255, 77, 109, 0.8); }
+    }
+    .station-card.repaired {
+      border-color: var(--accent-green);
+      background: rgba(6, 214, 160, 0.12);
+    }
+    .station-icon { font-size: 3rem; margin-bottom: 8px; }
+    .station-name { font-size: 1.25rem; font-weight: 800; margin-bottom: 6px; }
+    .station-status-pill {
+      font-size: 0.8rem;
+      font-weight: 800;
+      padding: 4px 12px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    /* Minigame Popup Modal Overlay */
+    #minigameModalOverlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(3, 7, 18, 0.85);
+      z-index: 300;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(10px);
+    }
+    #minigameModalOverlay.active { display: flex; }
+    .minigame-box {
+      background: var(--bg-panel);
+      border: 3px solid var(--accent-cyan);
+      border-radius: 28px;
+      padding: 28px;
+      max-width: 640px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+      position: relative;
+    }
+    .minigame-close-btn {
+      position: absolute;
+      top: 18px; right: 20px;
+      background: rgba(255, 255, 255, 0.15);
+      border: none;
+      color: #ffffff;
+      font-size: 1.3rem;
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    /* Wires Minigame Layout */
+    #minigameWires {
+      position: relative;
+      display: flex;
+      justify-content: space-between;
+      height: 260px;
+      margin-top: 20px;
+    }
+    #wireCanvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+    .wires-col {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      z-index: 2;
+    }
+    .wire-pin {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      border: 3px solid #ffffff;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      transition: transform 0.15s ease;
+    }
+    .wire-pin:hover { transform: scale(1.15); }
+    .wire-pin[data-color="red"] { background: #ff4d6d; }
+    .wire-pin[data-color="blue"] { background: #00f0ff; }
+    .wire-pin[data-color="yellow"] { background: #ffd166; }
+    .wire-pin[data-color="green"] { background: #06d6a0; }
+
+    /* Power Sliders Minigame */
+    #minigamePower {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      margin-top: 20px;
+    }
+    .power-ch-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    /* Keypad Minigame */
+    #minigameKeypad {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 16px;
+    }
+    .sequence-slots {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .seq-dot {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      border: 2px solid rgba(255, 255, 255, 0.4);
+    }
+    .seq-dot.lit { background: var(--accent-gold); box-shadow: 0 0 12px var(--accent-gold); }
+    .keypad-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+    .keypad-key {
+      width: 90px;
+      height: 90px;
+      border-radius: 20px;
+      background: var(--bg-card);
+      border: 2px solid rgba(0, 240, 255, 0.4);
+      font-size: 2rem;
+      font-weight: 900;
+      color: #ffffff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.1s ease;
+    }
+    .keypad-key:active, .keypad-key.pressed {
+      background: var(--accent-gold);
+      color: #030816;
+      box-shadow: 0 0 24px var(--accent-gold);
+      transform: scale(0.94);
+    }
+
+    /* =========================================================
+       8. MODALS & DIALOGS
+       ========================================================= */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(4, 8, 24, 0.88);
+      z-index: 500;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      backdrop-filter: blur(10px);
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-card {
+      background: var(--bg-panel);
+      border: 3px solid var(--accent-cyan);
+      border-radius: 32px;
+      padding: 34px 38px;
+      max-width: 600px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);
+      animation: popModal 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes popModal {
+      0% { transform: scale(0.85); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .modal-icon-badge {
+      font-size: 3.8rem;
+      margin-bottom: 12px;
+      filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.4));
+    }
+    .modal-title {
+      font-size: 2rem;
+      font-weight: 900;
+      margin-bottom: 10px;
+    }
+    .modal-sub {
+      font-size: 1.05rem;
+      color: var(--text-sub);
+      margin-bottom: 24px;
+      line-height: 1.45;
+    }
+    .modal-stats-box {
+      background: rgba(0, 0, 0, 0.35);
+      border-radius: 20px;
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 24px;
+    }
+    .stat-item-label { font-size: 0.8rem; color: var(--text-sub); margin-bottom: 4px; }
+    .stat-item-value { font-size: 1.6rem; font-weight: 900; color: var(--accent-gold); }
+
+    /* Victory Diploma */
+    .diploma-card {
+      border-color: var(--accent-gold);
+      background: radial-gradient(circle at 50% 20%, #1f274d, #0d1228);
+      box-shadow: 0 0 50px rgba(255, 209, 102, 0.35);
+    }
+    .victory-stars { font-size: 2.5rem; margin-bottom: 12px; }
+    .victory-avatar-badge {
+      margin-bottom: 16px;
+    }
+    .victory-avatar-emoji { font-size: 3.5rem; }
+  </style>
+</head>
+<body>
+
+  <!-- Starry Background with Twinkling Stars & Distant Planets -->
+  <div class="space-backdrop">
+    <div class="planet-bg planet-1"></div>
+    <div class="planet-bg planet-2"></div>
+    <div id="starField"></div>
+  </div>
+
+  <!-- =========================================================
+       1. OPENING / TITLE SCREEN
+       ========================================================= -->
+  <div id="screenTitle" class="game-screen active">
+    <div class="title-logo-wrap">
+      <div class="title-logo-badge">SPACE ACADEMY ADVENTURE</div>
+      <h1 class="title-heading">COSMO CREW</h1>
+      <p class="title-subheading">Choose your cute avatar and launch into your cosmic missions!</p>
+    </div>
+
+    <!-- Avatar Selection Box -->
+    <div class="avatar-selection-box">
+      <div class="avatar-box-title">CHOOSE YOUR ANIMAL ASTRONAUT</div>
+      <div class="avatar-grid">
+        <!-- Bunny Astronaut -->
+        <div class="avatar-option selected" data-avatar="bunny">
+          <svg viewBox="0 0 100 100" class="avatar-svg">
+            <rect x="25" y="70" width="50" height="26" rx="10" fill="#00b4d8"/>
+            <rect x="30" y="66" width="40" height="10" rx="5" fill="#ffd166"/>
+            <!-- Bunny Long Ears -->
+            <ellipse cx="36" cy="22" rx="7" ry="18" fill="#f8fafc" stroke="#00b4d8" stroke-width="2.5" transform="rotate(-8 36 22)"/>
+            <ellipse cx="36" cy="22" rx="3.5" ry="12" fill="#ffb4a2" transform="rotate(-8 36 22)"/>
+            <ellipse cx="64" cy="22" rx="7" ry="18" fill="#f8fafc" stroke="#00b4d8" stroke-width="2.5" transform="rotate(8 64 22)"/>
+            <ellipse cx="64" cy="22" rx="3.5" ry="12" fill="#ffb4a2" transform="rotate(8 64 22)"/>
+            <!-- Bubble Helmet -->
+            <circle cx="50" cy="50" r="30" fill="rgba(0, 240, 255, 0.15)" stroke="#00f0ff" stroke-width="3"/>
+            <!-- Bunny Face Inside Helmet -->
+            <ellipse cx="50" cy="52" rx="20" ry="18" fill="#f8fafc"/>
+            <circle cx="43" cy="49" r="3" fill="#0f172a"/>
+            <circle cx="57" cy="49" r="3" fill="#0f172a"/>
+            <circle cx="44" cy="47" r="1" fill="#ffffff"/>
+            <circle cx="58" cy="47" r="1" fill="#ffffff"/>
+            <ellipse cx="39" cy="54" rx="3.5" ry="2" fill="#ffb4a2" opacity="0.8"/>
+            <ellipse cx="61" cy="54" rx="3.5" ry="2" fill="#ffb4a2" opacity="0.8"/>
+            <polygon points="50,53 48,51 52,51" fill="#ff70a6"/>
+            <path d="M48,55 Q50,57 52,55" stroke="#475569" stroke-width="1.5" fill="none"/>
+            <path d="M30,36 A 25 25 0 0 1 45,26" stroke="#ffffff" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.8"/>
+          </svg>
+          <div class="avatar-label-name">Pip</div>
+          <div class="avatar-label-type">Bunny Astronaut</div>
+        </div>
+
+        <!-- Kitty Astronaut -->
+        <div class="avatar-option" data-avatar="cat">
+          <svg viewBox="0 0 100 100" class="avatar-svg">
+            <rect x="25" y="70" width="50" height="26" rx="10" fill="#9d4edd"/>
+            <rect x="30" y="66" width="40" height="10" rx="5" fill="#ffd166"/>
+            <!-- Kitty Pointy Ears -->
+            <polygon points="28,32 35,12 44,26" fill="#ff70a6" stroke="#c77dff" stroke-width="2"/>
+            <polygon points="32,30 36,18 41,27" fill="#ffe5ec"/>
+            <polygon points="72,32 65,12 56,26" fill="#ff70a6" stroke="#c77dff" stroke-width="2"/>
+            <polygon points="68,30 64,18 59,27" fill="#ffe5ec"/>
+            <!-- Helmet -->
+            <circle cx="50" cy="50" r="30" fill="rgba(255, 112, 166, 0.15)" stroke="#ff70a6" stroke-width="3"/>
+            <!-- Kitty Face -->
+            <circle cx="50" cy="52" r="19" fill="#fff0f3"/>
+            <circle cx="43" cy="49" r="3" fill="#0f172a"/>
+            <circle cx="57" cy="49" r="3" fill="#0f172a"/>
+            <circle cx="44" cy="47" r="1" fill="#ffffff"/>
+            <circle cx="58" cy="47" r="1" fill="#ffffff"/>
+            <!-- Whiskers -->
+            <line x1="33" y1="52" x2="26" y2="50" stroke="#ff70a6" stroke-width="1.5"/>
+            <line x1="33" y1="55" x2="26" y2="56" stroke="#ff70a6" stroke-width="1.5"/>
+            <line x1="67" y1="52" x2="74" y2="50" stroke="#ff70a6" stroke-width="1.5"/>
+            <line x1="67" y1="55" x2="74" y2="56" stroke="#ff70a6" stroke-width="1.5"/>
+            <polygon points="50,53 48,51 52,51" fill="#ff4d6d"/>
+            <path d="M47,55 Q50,57 53,55" stroke="#475569" stroke-width="1.5" fill="none"/>
+            <path d="M30,36 A 25 25 0 0 1 45,26" stroke="#ffffff" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.8"/>
+          </svg>
+          <div class="avatar-label-name">Luna</div>
+          <div class="avatar-label-type">Kitty Astronaut</div>
+        </div>
+
+        <!-- Bear Astronaut -->
+        <div class="avatar-option" data-avatar="bear">
+          <svg viewBox="0 0 100 100" class="avatar-svg">
+            <rect x="25" y="70" width="50" height="26" rx="10" fill="#e07a5f"/>
+            <rect x="30" y="66" width="40" height="10" rx="5" fill="#ffd166"/>
+            <!-- Round Bear Ears -->
+            <circle cx="32" cy="26" r="9" fill="#c47c48" stroke="#ffd166" stroke-width="2"/>
+            <circle cx="32" cy="26" r="4.5" fill="#ffe8d6"/>
+            <circle cx="68" cy="26" r="9" fill="#c47c48" stroke="#ffd166" stroke-width="2"/>
+            <circle cx="68" cy="26" r="4.5" fill="#ffe8d6"/>
+            <!-- Helmet -->
+            <circle cx="50" cy="50" r="30" fill="rgba(255, 209, 102, 0.15)" stroke="#ffd166" stroke-width="3"/>
+            <!-- Bear Face -->
+            <circle cx="50" cy="52" r="19" fill="#d48c58"/>
+            <ellipse cx="50" cy="56" rx="8" ry="6" fill="#ffe8d6"/>
+            <circle cx="43" cy="48" r="3" fill="#0f172a"/>
+            <circle cx="57" cy="48" r="3" fill="#0f172a"/>
+            <circle cx="44" cy="46" r="1" fill="#ffffff"/>
+            <circle cx="58" cy="46" r="1" fill="#ffffff"/>
+            <ellipse cx="50" cy="54" rx="3.5" ry="2.2" fill="#0f172a"/>
+            <path d="M50,56 L50,58" stroke="#0f172a" stroke-width="1.5"/>
+            <path d="M30,36 A 25 25 0 0 1 45,26" stroke="#ffffff" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.8"/>
+          </svg>
+          <div class="avatar-label-name">Barnaby</div>
+          <div class="avatar-label-type">Bear Astronaut</div>
+        </div>
+
+        <!-- Fox Astronaut -->
+        <div class="avatar-option" data-avatar="fox">
+          <svg viewBox="0 0 100 100" class="avatar-svg">
+            <rect x="25" y="70" width="50" height="26" rx="10" fill="#f77f00"/>
+            <rect x="30" y="66" width="40" height="10" rx="5" fill="#ffd166"/>
+            <!-- Fox Pointy Ears -->
+            <polygon points="26,30 33,10 44,24" fill="#e85d04" stroke="#ffd166" stroke-width="2"/>
+            <polygon points="30,28 34,16 41,25" fill="#ffffff"/>
+            <polygon points="74,30 67,10 56,24" fill="#e85d04" stroke="#ffd166" stroke-width="2"/>
+            <polygon points="70,28 66,16 59,25" fill="#ffffff"/>
+            <!-- Helmet -->
+            <circle cx="50" cy="50" r="30" fill="rgba(247, 127, 0, 0.15)" stroke="#f77f00" stroke-width="3"/>
+            <!-- Fox Face -->
+            <circle cx="50" cy="52" r="19" fill="#f48c06"/>
+            <path d="M33,52 Q40,62 50,60 Q60,62 67,52 Q58,68 42,68 Z" fill="#ffffff"/>
+            <circle cx="43" cy="48" r="3" fill="#0f172a"/>
+            <circle cx="57" cy="48" r="3" fill="#0f172a"/>
+            <circle cx="44" cy="46" r="1" fill="#ffffff"/>
+            <circle cx="58" cy="46" r="1" fill="#ffffff"/>
+            <circle cx="50" cy="57" r="2.5" fill="#0f172a"/>
+            <path d="M30,36 A 25 25 0 0 1 45,26" stroke="#ffffff" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.8"/>
+          </svg>
+          <div class="avatar-label-name">Sparky</div>
+          <div class="avatar-label-type">Fox Astronaut</div>
+        </div>
+      </div>
+
+      <!-- Player Name Input -->
+      <div class="name-input-row">
+        <span class="name-input-label">YOUR ASTRONAUT NAME:</span>
+        <input type="text" id="avatarNameInput" class="name-input-field" value="Pip" maxlength="15" autocomplete="off">
+      </div>
+
+      <!-- Live Animal Astronaut Preview Badge -->
+      <div id="avatarLivePreview" class="avatar-meet-preview">
+        <span>Meet your Cute Animal Astronaut:</span>
+        <strong id="previewAvatarLabel" style="color: #00f0ff;">Cadet Pip the Bunny Astronaut 🐰</strong>
+      </div>
+    </div>
+
+    <!-- Cute Animated Rocket on Launchpad -->
+    <div class="rocket-launchpad-wrap">
+      <div id="titleRocket" class="title-rocket">
+        <svg viewBox="0 0 100 140">
+          <!-- Rocket Exhaust Flames -->
+          <g class="rocket-flames">
+            <polygon points="50,110 38,138 50,130 62,138" fill="#ffd166"/>
+            <polygon points="50,114 44,130 50,126 56,130" fill="#ff70a6"/>
+          </g>
+          <!-- Rocket Body Fins -->
+          <polygon points="22,95 38,70 38,105" fill="#ff4d6d"/>
+          <polygon points="78,95 62,70 62,105" fill="#ff4d6d"/>
+          <!-- Rocket Main Fuselage -->
+          <path d="M50,10 C68,35 68,90 62,108 L38,108 C32,90 32,35 50,10 Z" fill="#f8fafc" stroke="#00f0ff" stroke-width="3"/>
+          <!-- Red Nosecone -->
+          <path d="M50,10 C58,22 62,35 62,40 L38,40 C38,35 42,22 50,10 Z" fill="#ff4d6d"/>
+          <!-- Cyan Cockpit Porthole -->
+          <circle cx="50" cy="58" r="14" fill="#00f0ff" stroke="#ffffff" stroke-width="3"/>
+          <circle cx="46" cy="54" r="4" fill="#ffffff"/>
+          <!-- Decorative Trim -->
+          <rect x="38" y="80" width="24" height="6" fill="#ffd166"/>
+        </svg>
+      </div>
+    </div>
+
+    <button id="btnStartAdventure" class="btn btn-gold btn-large pulse">
+      <span>🚀 START MISSION</span>
+    </button>
+  </div>
+
+  <!-- =========================================================
+       2. LEVEL SELECTION SCREEN
+       ========================================================= -->
+  <div id="screenLevelSelect" class="game-screen">
+    <div class="level-select-header">
+      <div id="levelSelectAvatarBadge" class="avatar-status-pill">
+        <!-- Rendered by JS -->
+      </div>
+      <h2 class="level-select-title">SELECT YOUR MISSION</h2>
+      <p style="color: var(--text-sub);">Choose an adventure level to explore with your robot buddy!</p>
+    </div>
+
+    <div class="level-cards-grid">
+      <!-- Level 1 Card -->
+      <div id="cardLevel1" class="level-card card-level-1">
+        <div class="level-card-planet-icon">🌍</div>
+        <div class="level-card-tag">LEVEL 1 • BIO-DOME WORKSHOP</div>
+        <h3 class="level-card-name">Earth Workshop</h3>
+        <p class="level-card-desc">Help regulate greenhouse oxygen, cultivate cosmic crops, and construct clean solar power arrays.</p>
+        <div class="level-tasks-list">
+          <div class="level-task-item"><span>🧪</span> Task 1: Oxygen Regulation (21%)</div>
+          <div class="level-task-item"><span>🌱</span> Task 2: Lunar Crop Production</div>
+          <div class="level-task-item"><span>☀️</span> Task 3: Solar Power Generation</div>
+        </div>
+        <button class="btn btn-green" style="width: 100%;">LAUNCH TO LEVEL 1 🚀</button>
+      </div>
+
+      <!-- Level 2 Card -->
+      <div id="cardLevel2" class="level-card card-level-2">
+        <div class="level-card-planet-icon">🛰️</div>
+        <div class="level-card-tag">LEVEL 2 • DEEP SPACE CRISIS</div>
+        <h3 class="level-card-name">Space Survival</h3>
+        <p class="level-card-desc">Respond to cabin micro-meteoroid hull leaks, sprint the lunar runway, and reboot the power deck.</p>
+        <div class="level-tasks-list">
+          <div class="level-task-item"><span>🛡️</span> Task 1: Fix Air Leak</div>
+          <div class="level-task-item"><span>🏃</span> Task 2: Collect Essentials (Runner)</div>
+          <div class="level-task-item"><span>⚡</span> Task 3: Power Save (Ship Deck)</div>
+        </div>
+        <button class="btn btn-primary" style="width: 100%;">LAUNCH TO LEVEL 2 🚀</button>
+      </div>
+    </div>
+
+    <button id="btnBackToTitle" class="btn btn-secondary">
+      <span>◀ CHANGE AVATAR</span>
+    </button>
+  </div>
+
+  <!-- =========================================================
+       3. ACTIVE GAME SCREEN (Level 1 & Level 2 Gameplay)
+       ========================================================= -->
+  <div id="screenGame" class="game-screen">
+    <!-- Top HUD -->
+    <header class="top-hud">
+      <div class="hud-left">
+        <div id="hudAvatarBadge" class="hud-avatar-pill">
+          <span id="hudAvatarIcon">🐰</span>
+          <span id="hudAvatarName">Pip</span>
+        </div>
+        <div class="hud-mission-info">
+          <span id="hudTaskTag" class="hud-task-tag">LEVEL 1 • TASK 01 / 03</span>
+          <h2 id="hudTaskName" class="hud-task-name">OXYGEN REGULATION</h2>
+        </div>
+      </div>
+
+      <div class="hud-center">
+        <div id="stepDot1" class="hud-step-dot active">1</div>
+        <div id="stepLine1" class="hud-step-line"></div>
+        <div id="stepDot2" class="hud-step-dot">2</div>
+        <div id="stepLine2" class="hud-step-line"></div>
+        <div id="stepDot3" class="hud-step-dot">3</div>
+      </div>
+
+      <div class="hud-right">
+        <div class="hud-timer-badge">
+          <span>⏱️</span>
+          <span id="hudTimerVal">1:00</span>
+        </div>
+        <button id="btnToggleMusic" class="hud-icon-btn">🎵 Music: ON</button>
+        <button id="btnToggleSfx" class="hud-icon-btn">🔊 SFX: ON</button>
+        <input type="range" id="volumeSlider" min="0" max="1" step="0.05" value="0.7" title="Volume" style="width: 65px; accent-color: var(--accent-cyan); cursor: pointer;">
+        <button id="btnPauseGame" class="hud-icon-btn">⏸️ Pause</button>
+      </div>
+    </header>
+
+    <!-- Sub-HUD Task Status Bars -->
+    <!-- Level 1 Task 1 Sub-HUD -->
+    <div id="l1t1HudItems" class="sub-hud-bar">
+      <div class="hud-stat-pill">
+        <span>OXYGEN STATUS:</span>
+        <span id="l1t1StatusPill" class="status-pill safe">STABLE (21%)</span>
+      </div>
+      <div class="hud-stat-pill">
+        <span>TARGET: <strong>21% (Safe: 19%–23%)</strong></span>
+      </div>
+    </div>
+
+    <!-- Level 1 Task 2 Sub-HUD -->
+    <div id="l1t2HudItems" class="sub-hud-bar">
+      <div class="hud-stat-pill">
+        <span>🌾 MISSION GOAL:</span>
+        <span id="l1t2GoalStatus">Plant, water, grow, and harvest 4 beds!</span>
+      </div>
+    </div>
+
+    <!-- Level 1 Task 3 Sub-HUD -->
+    <div id="l1t3HudItems" class="sub-hud-bar">
+      <div class="hud-stat-pill">
+        <span>☀️ SOLAR GRID:</span>
+        <div class="hud-bar-wrap"><div id="l1t3PowerFill" class="hud-bar-fill" style="width: 0%;"></div></div>
+        <span id="l1t3PowerVal">0%</span>
+      </div>
+      <div class="hud-stat-pill">
+        <span>PANELS MOUNTED: <strong id="l1t3CountVal">0 / 4</strong></span>
+      </div>
+    </div>
+
+    <!-- Level 2 Task 1 Sub-HUD -->
+    <div id="task1HudItems" class="sub-hud-bar">
+      <div class="hud-stat-pill">
+        <span>PRESSURE:</span>
+        <div class="hud-bar-wrap"><div id="t1PressureFill" class="hud-bar-fill" style="width: 100%;"></div></div>
+        <span id="t1PressurePct">100%</span>
+      </div>
+      <div class="hud-stat-pill">
+        <span>LEAKS SEALED: <strong id="t1LeaksRemaining">0 / 6</strong></span>
+      </div>
+    </div>
+
+    <!-- Level 2 Task 2 Sub-HUD -->
+    <div id="task2HudItems" class="sub-hud-bar">
+      <div id="pillO2" class="hud-stat-pill"><span>💎 O₂:</span> <strong id="runnerO2Count">0/5</strong></div>
+      <div id="pillWater" class="hud-stat-pill"><span>💧 Water:</span> <strong id="runnerWaterCount">0/5</strong></div>
+      <div id="pillShield" class="hud-stat-pill"><span>🛡️ Shield:</span> <strong id="runnerShieldCount">0/5</strong></div>
+    </div>
+
+    <!-- Level 2 Task 3 Sub-HUD -->
+    <div id="task3HudItems" class="sub-hud-bar">
+      <div class="hud-stat-pill">
+        <span>MAIN POWER:</span>
+        <div class="hud-bar-wrap"><div id="t3PowerFill" class="hud-bar-fill" style="width: 100%;"></div></div>
+        <span id="t3PowerPct">100%</span>
+      </div>
+      <div class="hud-stat-pill">
+        <span>SYSTEMS REPAIRED: <strong id="t3RepairedCount">0 / 3</strong></span>
+      </div>
+    </div>
+
+    <!-- Main Viewport Area -->
+    <div class="game-content-view">
+
+      <!-- LEVEL 1, TASK 1: OXYGEN REGULATION -->
+      <div id="l1t1View" class="task-view-container">
+        <div id="l1t1DomeVisual" class="o2-console-card">
+          <div class="o2-header">
+            <h2>Bio-Dome Oxygen Regulation</h2>
+            <p>Slide until the oxygen needle lands in the safe green zone at <strong>21%</strong>.</p>
+          </div>
+
+          <div id="l1t1WarningBox" class="status-banner safe">
+            <!-- Dynamic update via JS -->
+          </div>
+
+          <div id="l1t1OxygenVal" class="o2-meter-display">21%</div>
+
+          <!-- Color-coded track with safe zone -->
+          <div class="gauge-track-container">
+            <div class="zone-danger-low"></div>
+            <div class="zone-safe"></div>
+            <div class="zone-danger-high"></div>
+            <div id="l1t1GaugeNeedle" class="gauge-needle" style="left: 21%;"></div>
+          </div>
+
+          <!-- Large child-friendly slider -->
+          <input type="range" id="l1t1OxygenSlider" class="slider-input-large" min="0" max="100" value="10">
+
+          <button id="l1t1ConfirmBtn" class="btn btn-green btn-large">
+            <span>🔒 LOCK IN O₂ LEVEL</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- LEVEL 1, TASK 2: LUNAR CROP PRODUCTION -->
+      <div id="l1t2View" class="task-view-container">
+        <canvas id="l1t2Canvas"></canvas>
+        <div style="position: absolute; bottom: 20px; left: 24px; display: flex; gap: 8px; z-index: 50;">
+          <button id="l1t2BtnLeft" class="touch-btn">◀</button>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <button id="l1t2BtnUp" class="touch-btn">▲</button>
+            <button id="l1t2BtnDown" class="touch-btn">▼</button>
+          </div>
+          <button id="l1t2BtnRight" class="touch-btn">▶</button>
+        </div>
+        <div class="farm-action-btn-bar">
+          <button id="l1t2ActionBtn" class="btn btn-gold btn-large">🌱 Plant Seeds</button>
+        </div>
+      </div>
+
+      <!-- LEVEL 1, TASK 3: SOLAR POWER GENERATION -->
+      <div id="l1t3View" class="task-view-container">
+        <div class="solar-play-board">
+          <div id="l1t3Grid" class="solar-terrain-grid">
+            <!-- Slots rendered dynamically by level1Task3.js -->
+          </div>
+          <div id="l1t3PanelTray" class="solar-piece-tray">
+            <!-- Panels rendered dynamically by level1Task3.js -->
+          </div>
+        </div>
+      </div>
+
+      <!-- LEVEL 2, TASK 1: FIX AIR LEAK -->
+      <div id="task1View" class="task-view-container">
+        <div id="hullVignette" class="hull-vignette"></div>
+        <canvas id="t1Canvas"></canvas>
+      </div>
+
+      <!-- LEVEL 2, TASK 2: COLLECT ESSENTIALS (RUNNER) -->
+      <div id="task2View" class="task-view-container">
+        <canvas id="runnerCanvas"></canvas>
+        <div class="runner-touch-controls">
+          <div style="display: flex; gap: 12px;">
+            <button id="touchBtnLeft" class="touch-btn">◀</button>
+            <button id="touchBtnRight" class="touch-btn">▶</button>
+          </div>
+          <div style="display: flex; gap: 12px;">
+            <button id="touchBtnJump" class="touch-btn">▲</button>
+            <button id="touchBtnSlide" class="touch-btn">▼</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- LEVEL 2, TASK 3: POWER SAVE (SPACESHIP DECK) -->
+      <div id="task3View" class="task-view-container">
+        <div id="spaceshipDeck">
+          <div class="station-card" id="station-oxygen" data-station="oxygen">
+            <div class="station-icon">🫧</div>
+            <div class="station-name">Oxygen Generator</div>
+            <div class="station-status-pill">NOMINAL</div>
+          </div>
+          <div class="station-card" id="station-navigation" data-station="navigation">
+            <div class="station-icon">🧭</div>
+            <div class="station-name">Navigation Bridge</div>
+            <div class="station-status-pill">NOMINAL</div>
+          </div>
+          <div class="station-card" id="station-reactor" data-station="reactor">
+            <div class="station-icon">⚛️</div>
+            <div class="station-name">Main Reactor</div>
+            <div class="station-status-pill">NOMINAL</div>
+          </div>
+          <div class="station-card" id="station-lifeSupport" data-station="lifeSupport">
+            <div class="station-icon">❤️</div>
+            <div class="station-name">Life Support</div>
+            <div class="station-status-pill">NOMINAL</div>
+          </div>
+          <div class="station-card" id="station-communication" data-station="communication">
+            <div class="station-icon">📡</div>
+            <div class="station-name">Communications</div>
+            <div class="station-status-pill">NOMINAL</div>
+          </div>
+        </div>
+
+        <!-- Task 3 Minigame Overlay Modal -->
+        <div id="minigameModalOverlay">
+          <div class="minigame-box">
+            <button id="minigameCloseBtn" class="minigame-close-btn">✕</button>
+            <h3 id="minigameTitle" style="font-size: 1.4rem; color: var(--accent-gold); margin-bottom: 6px;">REPAIR SYSTEM</h3>
+            <p id="minigameDesc" style="color: var(--text-sub); font-size: 0.95rem;">Complete the calibration puzzle.</p>
+
+            <!-- 1) Wires Minigame -->
+            <div id="minigameWires" style="display: none;">
+              <canvas id="wireCanvas"></canvas>
+              <div id="wiresLeftCol" class="wires-col"></div>
+              <div id="wiresRightCol" class="wires-col"></div>
+            </div>
+
+            <!-- 2) Power Sliders Minigame -->
+            <div id="minigamePower" style="display: none;">
+              <div class="power-ch-row">
+                <span>CH-1:</span>
+                <input type="range" id="sliderCh1" min="0" max="100" class="slider-input-large">
+              </div>
+              <div class="power-ch-row">
+                <span>CH-2:</span>
+                <input type="range" id="sliderCh2" min="0" max="100" class="slider-input-large">
+              </div>
+              <div class="power-ch-row">
+                <span>CH-3:</span>
+                <input type="range" id="sliderCh3" min="0" max="100" class="slider-input-large">
+              </div>
+              <div id="powerCalibrationStatus" style="font-weight: 800; color: var(--accent-cyan); text-align: center;">Align all channels into target balance.</div>
+            </div>
+
+            <!-- 3) Keypad Minigame -->
+            <div id="minigameKeypad" style="display: none;">
+              <div id="sequenceSlots" class="sequence-slots"></div>
+              <div id="keypadGrid" class="keypad-grid">
+                <button class="keypad-key" data-key="0">1</button>
+                <button class="keypad-key" data-key="1">2</button>
+                <button class="keypad-key" data-key="2">3</button>
+                <button class="keypad-key" data-key="3">4</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- =========================================================
+       ROBOT BUDDY WIDGET (Always with player!)
+       ========================================================= -->
+  <div id="robotBuddyWidget">
+    <div class="robot-figure">
+      <svg viewBox="0 0 80 95">
+        <!-- Floating Thruster Glow -->
+        <ellipse cx="40" cy="85" rx="16" ry="6" fill="#00f0ff" opacity="0.7"/>
+        <polygon points="40,82 32,95 40,90 48,95" fill="#ffd166"/>
+        <!-- Robot Body -->
+        <rect x="18" y="56" width="44" height="26" rx="12" fill="#334155" stroke="#00f0ff" stroke-width="2.5"/>
+        <circle cx="40" cy="69" r="6" fill="#ffd166"/>
+        <!-- Neck -->
+        <rect x="36" y="50" width="8" height="8" fill="#64748b"/>
+        <!-- Robot Head -->
+        <rect x="12" y="16" width="56" height="36" rx="14" fill="#1e293b" stroke="#00f0ff" stroke-width="2.5"/>
+        <!-- Antenna -->
+        <line x1="40" y1="16" x2="40" y2="4" stroke="#00f0ff" stroke-width="2.5"/>
+        <circle cx="40" cy="4" r="4.5" fill="#ffd166"/>
+      </svg>
+      <!-- Animated Screen & Eyes -->
+      <div class="robot-screen">
+        <span id="robotEyes" class="robot-eyes">•  •</span>
+      </div>
+    </div>
+
+    <!-- Speech Bubble -->
+    <div id="robotSpeechBubble" class="robot-speech-bubble">
+      <div class="robot-buddy-name">🤖 GIZMO (ROBOT BUDDY)</div>
+      <div id="robotSpeechText" class="robot-speech-text">Ready for our space mission!</div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       MODALS: BRIEFING, COMPLETE, GAME OVER, VICTORY, PAUSE
+       ========================================================= -->
+
+  <!-- Briefing Modal -->
+  <div id="modalBriefing" class="modal-overlay">
+    <div class="modal-card">
+      <div id="briefingIconWrap" class="modal-icon-badge">🚀</div>
+      <div id="briefingTagline" style="font-size: 0.8rem; font-weight: 800; color: var(--accent-gold); letter-spacing: 1px;">MISSION BRIEFING</div>
+      <h2 id="briefingTitle" class="modal-title">MISSION BRIEFING</h2>
+      <div id="briefingCode" style="display: none;"></div>
+      <p id="briefingSubtitle" class="modal-sub">Task briefing message.</p>
+      <div id="briefingProtocolList" class="modal-stats-box" style="flex-direction: column; gap: 8px; text-align: left;"></div>
+      <div id="briefingControlsGuide" style="margin-bottom: 20px; font-size: 0.95rem; color: var(--accent-cyan);"></div>
+      <button id="btnStartTask" class="btn btn-primary btn-large pulse">
+        <span>LET'S GO! 🚀</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Task Complete Modal -->
+  <div id="modalTaskComplete" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-icon-badge">🎉</div>
+      <h2 id="completeTitle" class="modal-title">TASK COMPLETE!</h2>
+      <p id="completeSubtitle" class="modal-sub">Exceptional response Cadet!</p>
+      <div class="modal-stats-box">
+        <div>
+          <div id="completeStat1Lbl" class="stat-item-label">Performance</div>
+          <div id="completeStat1Val" class="stat-item-value">100%</div>
+        </div>
+        <div>
+          <div id="completeStat2Lbl" class="stat-item-label">Time Taken</div>
+          <div id="completeStat2Val" class="stat-item-value">15s</div>
+        </div>
+      </div>
+      <button id="btnNextTask" class="btn btn-green btn-large pulse">
+        <span>NEXT MISSION ➡️</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Game Over Modal -->
+  <div id="modalGameOver" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-icon-badge">💫</div>
+      <h2 class="modal-title" style="color: var(--accent-red);">MISSION INCOMPLETE</h2>
+      <p id="gameOverReason" class="modal-sub">Time expired before parameters were met.</p>
+      <div id="gameOverTaskName" style="font-size: 0.9rem; font-weight: 800; color: var(--accent-gold); margin-bottom: 24px;">CosmoCrew Mission</div>
+      <button id="btnRetryTask" class="btn btn-primary btn-large pulse">
+        <span>TRY AGAIN 🔄</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Level Victory Diploma Modal -->
+  <div id="modalVictory" class="modal-overlay">
+    <div class="modal-card diploma-card">
+      <div class="victory-stars">⭐ ⭐ ⭐</div>
+      <div id="victoryAvatarBadge" class="victory-avatar-badge">
+        <span class="victory-avatar-emoji">🐰</span>
+        <h3>Awarded to Cadet Explorer</h3>
+      </div>
+      <h2 class="modal-title" style="color: var(--accent-gold);">LEVEL COMPLETE!</h2>
+      <p class="modal-sub">Congratulations! You successfully finished all 3 missions!</p>
+      <div class="modal-stats-box">
+        <div>
+          <div class="stat-item-label">TOTAL TIME</div>
+          <div id="victoryTotalTime" class="stat-item-value">45s</div>
+        </div>
+        <div>
+          <div class="stat-item-label">MISSION SCORE</div>
+          <div id="victoryTotalScore" class="stat-item-value">3000 PTS</div>
+        </div>
+      </div>
+      <button id="btnRestartMission" class="btn btn-gold btn-large pulse">
+        <span>CHOOSE LEVEL 🌌</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Pause Modal -->
+  <div id="modalPause" class="modal-overlay">
+    <div class="modal-card" style="max-width: 440px;">
+      <h2 class="modal-title">GAME PAUSED</h2>
+      <p class="modal-sub">Take a quick breather Cadet!</p>
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        <button id="btnResumeGame" class="btn btn-primary"><span>▶️ RESUME</span></button>
+        <button id="btnRestartTask" class="btn btn-secondary"><span>🔄 RESTART TASK</span></button>
+        <button id="btnQuitToMenu" class="btn btn-secondary"><span>🌌 LEVEL SELECT</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Background Stars Generator Script -->
+  <script>
+    (function initStars() {
+      const container = document.getElementById('starField');
+      if (!container) return;
+      const count = 75;
+      for (let i = 0; i < count; i++) {
+        const star = document.createElement('div');
+        star.className = 'star';
+        star.style.left = `${Math.random() * 100}vw`;
+        star.style.top = `${Math.random() * 100}vh`;
+        const size = 1 + Math.random() * 3.5;
+        star.style.width = `${size}px`;
+        star.style.height = `${size}px`;
+        star.style.animationDelay = `${Math.random() * 4}s`;
+        container.appendChild(star);
+      }
+    })();
+  </script>
+
+  <!-- Game Scripts -->
+  <script src="audio.js"></script>
+  <script src="level1Task1.js"></script>
+  <script src="level1Task2.js"></script>
+  <script src="level1Task3.js"></script>
+  <script src="level2Task1.js"></script>
+  <script src="level2Task2.js"></script>
+  <script src="level2Task3.js"></script>
+  <script src="ui.js"></script>
+</body>
+</html>

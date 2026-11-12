@@ -614,14 +614,75 @@ class Task1AirLeak {
       ctx.fill();
     }
 
-    // Visor
+    // Cute Animal Tail behind suit
+    if (profile.avatarId === 'cat') {
+      ctx.strokeStyle = profile.color;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(-10, 4);
+      ctx.quadraticCurveTo(-18, -4, -14, -12);
+      ctx.stroke();
+    } else if (profile.avatarId === 'bear') {
+      ctx.fillStyle = '#c47c48';
+      ctx.beginPath();
+      ctx.arc(-11, 4, 4, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (profile.avatarId === 'bunny') {
+      ctx.fillStyle = '#f8fafc';
+      ctx.beginPath();
+      ctx.arc(-11, 4, 4.5, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (profile.avatarId === 'fox') {
+      ctx.fillStyle = '#e85d04';
+      ctx.beginPath();
+      ctx.ellipse(-14, 2, 6, 10, 0.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Transparent Visor Glass
     ctx.beginPath();
-    ctx.ellipse(4, -24, 8, 6, 0, 0, Math.PI * 2);
-    ctx.fillStyle = '#00f0ff';
-    ctx.shadowColor = '#00f0ff';
-    ctx.shadowBlur = 8;
+    ctx.ellipse(3, -24, 10, 8, 0, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(0, 240, 255, 0.25)';
     ctx.fill();
-    ctx.shadowBlur = 0;
+    ctx.strokeStyle = '#00f0ff';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Cute Animal Face inside Helmet
+    if (profile.avatarId === 'bunny') {
+      ctx.fillStyle = '#f8fafc';
+      ctx.beginPath(); ctx.ellipse(4, -23, 6, 5, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath(); ctx.arc(3, -24, 1.2, 0, Math.PI * 2); ctx.arc(6.5, -24, 1.2, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ff70a6';
+      ctx.beginPath(); ctx.arc(5, -22.5, 1, 0, Math.PI * 2); ctx.fill();
+    } else if (profile.avatarId === 'cat') {
+      ctx.fillStyle = '#fff0f3';
+      ctx.beginPath(); ctx.ellipse(4, -23, 6, 5, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath(); ctx.arc(3, -24, 1.2, 0, Math.PI * 2); ctx.arc(6.5, -24, 1.2, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ff4d6d';
+      ctx.beginPath(); ctx.arc(5, -22.5, 1, 0, Math.PI * 2); ctx.fill();
+    } else if (profile.avatarId === 'bear') {
+      ctx.fillStyle = '#d48c58';
+      ctx.beginPath(); ctx.ellipse(4, -23, 6, 5, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath(); ctx.arc(3, -24, 1.2, 0, Math.PI * 2); ctx.arc(6.5, -24, 1.2, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(5, -22.5, 1, 0, Math.PI * 2); ctx.fill();
+    } else if (profile.avatarId === 'fox') {
+      ctx.fillStyle = '#f48c06';
+      ctx.beginPath(); ctx.ellipse(4, -23, 6, 5, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath(); ctx.arc(3, -24, 1.2, 0, Math.PI * 2); ctx.arc(6.5, -24, 1.2, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(5, -22.5, 1, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // Visor glass glint
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(1, -26, 3.5, Math.PI * 1.1, Math.PI * 1.7);
+    ctx.stroke();
 
     // Laser welding torch in hand
     ctx.strokeStyle = '#ffc837';

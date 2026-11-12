@@ -153,7 +153,7 @@ class UIManager {
     window.playerProfile = {
       avatarId: 'bunny',
       avatarName: 'Pip',
-      avatarTitle: 'Star Bunny',
+      avatarTitle: 'Bunny Astronaut',
       avatarEmoji: '🐰',
       color: '#00f0ff',
       accent: '#06d6a0'
@@ -201,10 +201,10 @@ class UIManager {
     const nameInput = document.getElementById('avatarNameInput');
 
     const avatars = {
-      bunny: { name: 'Pip', title: 'Star Bunny', emoji: '🐰', color: '#00f0ff', accent: '#06d6a0' },
-      cat: { name: 'Luna', title: 'Cosmo Kitty', emoji: '🐱', color: '#ff70a6', accent: '#ffd166' },
-      bear: { name: 'Barnaby', title: 'Astro Bear', emoji: '🐻', color: '#ffbe0b', accent: '#fb5607' },
-      fox: { name: 'Sparky', title: 'Rocket Fox', emoji: '🦊', color: '#ff9770', accent: '#ff4d6d' }
+      bunny: { name: 'Pip', title: 'Bunny Astronaut', emoji: '🐰', color: '#00f0ff', accent: '#06d6a0' },
+      cat: { name: 'Luna', title: 'Kitty Astronaut', emoji: '🐱', color: '#ff70a6', accent: '#ffd166' },
+      bear: { name: 'Barnaby', title: 'Bear Astronaut', emoji: '🐻', color: '#ffbe0b', accent: '#fb5607' },
+      fox: { name: 'Sparky', title: 'Fox Astronaut', emoji: '🦊', color: '#ff9770', accent: '#ff4d6d' }
     };
 
     avatarCards.forEach(card => {
@@ -230,7 +230,7 @@ class UIManager {
         this.updateProfileDisplays();
 
         if (window.robotBuddy) {
-          window.robotBuddy.say(`Cute choice! Looking sharp, ${info.name}!`, 'happy', 2500);
+          window.robotBuddy.say(`Cute choice! Looking sharp, Cadet ${info.name}!`, 'happy', 2500);
         }
       });
     });
@@ -254,12 +254,19 @@ class UIManager {
     if (this.hud.avatarIcon) this.hud.avatarIcon.textContent = p.avatarEmoji;
     if (this.hud.avatarName) this.hud.avatarName.textContent = p.avatarName;
 
+    // Update live preview badge on title screen
+    const livePreview = document.getElementById('previewAvatarLabel');
+    if (livePreview) {
+      livePreview.textContent = `Cadet ${p.avatarName} the ${p.avatarTitle} ${p.avatarEmoji}`;
+      livePreview.style.color = p.color;
+    }
+
     // Update Level Select greeting
     const lsBadge = document.getElementById('levelSelectAvatarBadge');
     if (lsBadge) {
       lsBadge.innerHTML = `
         <span class="avatar-badge-emoji">${p.avatarEmoji}</span>
-        <span class="avatar-badge-text">Cadet <strong>${p.avatarName}</strong> (${p.avatarTitle})</span>
+        <span class="avatar-badge-text">Cadet <strong>${p.avatarName}</strong> the ${p.avatarTitle}</span>
       `;
     }
   }

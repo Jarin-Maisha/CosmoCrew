@@ -67,6 +67,53 @@ class Task2LunarCrops {
         this.performAction();
       };
     }
+
+    // On-screen D-pad buttons
+    const bindHold = (btnId, keyName) => {
+      const btn = document.getElementById(btnId);
+      if (!btn) return;
+      const start = (e) => { e.preventDefault(); this.keys[keyName] = true; };
+      const stop = (e) => { e.preventDefault(); this.keys[keyName] = false; };
+      btn.addEventListener('mousedown', start);
+      btn.addEventListener('mouseup', stop);
+      btn.addEventListener('mouseleave', stop);
+      btn.addEventListener('touchstart', start, { passive: false });
+      btn.addEventListener('touchend', stop);
+    };
+    bindHold('l1t2BtnLeft', 'left');
+    bindHold('l1t2BtnRight', 'right');
+    bindHold('l1t2BtnUp', 'up');
+    bindHold('l1t2BtnDown', 'down');
+
+    // Canvas click to walk/interact directly
+    if (this.canvas) {
+      this.canvas.addEventListener('pointerdown', (e) => {
+        if (!this.active || this.paused) return;
+        const rect = this.canvas.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const clickY = e.clientY - rect.top;
+
+        // Check if clicked directly on or near a bed
+        for (let bed of this.beds) {
+          if (
+            clickX >= bed.x - 20 &&
+            clickX <= bed.x + bed.w + 20 &&
+            clickY >= bed.y - 20 &&
+            clickY <= bed.y + bed.h + 20
+          ) {
+            // Move avatar to bed and perform action
+            this.avatar.x = bed.x + bed.w / 2;
+            this.avatar.y = bed.y + bed.h + 20;
+            this.performAction();
+            return;
+          }
+        }
+
+        // Otherwise move avatar toward click
+        this.avatar.x = clickX;
+        this.avatar.y = clickY;
+      });
+    }
   }
 
   handleKeyDown(e) {
@@ -789,14 +836,85 @@ class Task2LunarCrops {
       ctx.fill();
     }
 
-    // Visor
+    // Cute Animal Tail behind suit
+    if (profile.avatarId === 'cat') {
+      ctx.strokeStyle = profile.color;
+      ctx.lineWidth = 3.5;
+      ctx.beginPath();
+      ctx.moveTo(-10, 4);
+      ctx.quadraticCurveTo(-18, -4, -14, -12);
+      ctx.stroke();
+    } else if (profile.avatarId === 'bear') {
+      ctx.fillStyle = '#c47c48';
+      ctx.beginPath();
+      ctx.arc(-11, 4, 4.5, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (profile.avatarId === 'bunny') {
+      ctx.fillStyle = '#f8fafc';
+      ctx.beginPath();
+      ctx.arc(-11, 4, 5, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (profile.avatarId === 'fox') {
+      ctx.fillStyle = '#e85d04';
+      ctx.beginPath();
+      ctx.ellipse(-15, 2, 7, 12, 0.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(-18, -6, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Transparent Visor Glass
     ctx.beginPath();
-    ctx.ellipse(4, -25, 10, 8, 0, 0, Math.PI * 2);
-    ctx.fillStyle = '#00f0ff';
-    ctx.shadowColor = '#00f0ff';
-    ctx.shadowBlur = 8;
+    ctx.ellipse(3, -25, 11, 9, 0, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(0, 240, 255, 0.25)';
     ctx.fill();
-    ctx.shadowBlur = 0;
+    ctx.strokeStyle = '#00f0ff';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Cute Animal Face inside Helmet
+    if (profile.avatarId === 'bunny') {
+      ctx.fillStyle = '#f8fafc';
+      ctx.beginPath(); ctx.ellipse(4, -24, 7, 6, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath(); ctx.arc(3, -25, 1.2, 0, Math.PI * 2); ctx.arc(7, -25, 1.2, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ffb4a2';
+      ctx.beginPath(); ctx.arc(1.5, -23, 1.5, 0, Math.PI * 2); ctx.arc(8.5, -23, 1.5, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ff70a6';
+      ctx.beginPath(); ctx.arc(5, -23.5, 1, 0, Math.PI * 2); ctx.fill();
+    } else if (profile.avatarId === 'cat') {
+      ctx.fillStyle = '#fff0f3';
+      ctx.beginPath(); ctx.ellipse(4, -24, 7, 6, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath(); ctx.arc(3, -25, 1.2, 0, Math.PI * 2); ctx.arc(7, -25, 1.2, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ff4d6d';
+      ctx.beginPath(); ctx.arc(5, -23.5, 1, 0, Math.PI * 2); ctx.fill();
+    } else if (profile.avatarId === 'bear') {
+      ctx.fillStyle = '#d48c58';
+      ctx.beginPath(); ctx.ellipse(4, -24, 7, 6, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ffe8d6';
+      ctx.beginPath(); ctx.ellipse(5, -23, 3.5, 2.5, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath(); ctx.arc(3, -25, 1.2, 0, Math.PI * 2); ctx.arc(7, -25, 1.2, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(5, -23.5, 1, 0, Math.PI * 2); ctx.fill();
+    } else if (profile.avatarId === 'fox') {
+      ctx.fillStyle = '#f48c06';
+      ctx.beginPath(); ctx.ellipse(4, -24, 7, 6, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath(); ctx.ellipse(5, -22, 4, 2.5, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath(); ctx.arc(3, -25, 1.2, 0, Math.PI * 2); ctx.arc(7, -25, 1.2, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(5, -23, 1, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // Visor glass glint
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(1, -27, 4, Math.PI * 1.1, Math.PI * 1.7);
+    ctx.stroke();
 
     // Tool in hand based on phase
     if (this.phase === 'plant') {
