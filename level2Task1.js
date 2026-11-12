@@ -188,6 +188,14 @@ class Task1AirLeak {
       this.updateHUD();
     }, 1000);
 
+    const playerName = (window.playerProfile && window.playerProfile.avatarName) || 'Cadet';
+    if (window.robotBuddy) {
+      window.robotBuddy.say(
+        `Emergency, ${playerName}! Micro-meteoroids punctured the window! Click on cracks or fly near them to weld and seal before air runs out!`,
+        'worried'
+      );
+    }
+
     this.lastTime = performance.now();
     this.loop();
     this.updateHUD();
@@ -298,6 +306,16 @@ class Task1AirLeak {
     this.active = false;
     if (this.timerInterval) clearInterval(this.timerInterval);
 
+    const playerName = (window.playerProfile && window.playerProfile.avatarName) || 'Cadet';
+    if (window.soundSystem) window.soundSystem.playVictory();
+    if (window.showConfetti) window.showConfetti();
+    if (window.robotBuddy) {
+      window.robotBuddy.say(
+        `Awesome reflexes, ${playerName}! All 6 breaches sealed airtight! Cabin pressure stabilized!`,
+        'celebrate'
+      );
+    }
+
     setTimeout(() => {
       if (this.callbacks.onWin) {
         this.callbacks.onWin({
@@ -305,7 +323,7 @@ class Task1AirLeak {
           timeTaken: 75 - this.timeLeft
         });
       }
-    }, 600);
+    }, 1200);
   }
 
   triggerGameOver(reason) {
