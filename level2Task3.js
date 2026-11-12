@@ -309,14 +309,6 @@ class Task3PowerSave {
       this.updateHUD();
     }, 1000);
 
-    const playerName = (window.playerProfile && window.playerProfile.avatarName) || 'Cadet';
-    if (window.robotBuddy) {
-      window.robotBuddy.say(
-        `Cadet ${playerName}! 3 critical ship systems are malfunctioning! Click each red blinking room to solve wires, power, or keypad puzzles!`,
-        'worried'
-      );
-    }
-
     this.lastTime = performance.now();
     this.loop();
     this.updateHUD();
@@ -789,16 +781,6 @@ class Task3PowerSave {
     if (this.timerInterval) clearInterval(this.timerInterval);
     if (window.soundSystem) window.soundSystem.stopMusic();
 
-    const playerName = (window.playerProfile && window.playerProfile.avatarName) || 'Space Hero';
-    if (window.soundSystem) window.soundSystem.playVictory();
-    if (window.showConfetti) window.showConfetti();
-    if (window.robotBuddy) {
-      window.robotBuddy.say(
-        `UNBELIEVABLE, ${playerName}! All 3 ship systems are online! You completed all Space Survival missions like a true hero!`,
-        'celebrate'
-      );
-    }
-
     setTimeout(() => {
       if (this.callbacks.onWin) {
         this.callbacks.onWin({
@@ -806,7 +788,7 @@ class Task3PowerSave {
           timeTaken: 120 - this.timeLeft
         });
       }
-    }, 1400);
+    }, 600);
   }
 
   triggerGameOver(reason) {
